@@ -1,0 +1,35 @@
+{
+  "name": "learn-react-native-hoidanit",
+  "author": {
+    "name": "Hỏi Dân IT",
+    "url": "https://hoidanit.vn"
+  },
+  "version": "1.0.0",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start --tunnel",
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~5.0.4",
+    "@react-navigation/native": "^7.1.17",
+    "@react-navigation/native-stack": "^7.3.25",
+    "expo": "53.0.22",
+    "expo-font": "~13.3.2",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "react": "^19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "^0.79.5",
+    "react-native-web": "^0.20.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.24.8",
+    "@types/react": "^19.1.11",
+    "typescript": "5.3.3"
+  },
+  "private": true
+}
