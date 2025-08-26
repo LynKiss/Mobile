@@ -1,5 +1,12 @@
 import { globalStyles } from "../untils/const";
-import { Button, StyleSheet, Text, View } from "react-native";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ImageBackground,
+} from "react-native";
 import {
   NavigationProp,
   RouteProp,
@@ -26,19 +33,43 @@ const DetailScreen = () => {
   const { id, title, start } = route.params;
 
   return (
-    <View>
+    <ImageBackground
+      source={require("../assets/images/favicon.png")}
+      style={{ flex: 1 }}
+    >
       <Text style={styles.review}>Detail Screen</Text>
       <Text style={styles.reviewText}>ID :{route.params?.id}</Text>
       <Text style={styles.reviewText}> Title :{route.params?.title}</Text>
       <Text style={styles.reviewText}>Start :{route.params?.start}</Text>
-
+      <View style={{ flexDirection: "row", marginHorizontal: 10, gap: 10 }}>
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/images/favicon.png")}
+        />
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/images/favicon.png")}
+        />
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/images/favicon.png")}
+        />
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/images/favicon.png")}
+        />
+        <Image
+          style={{ width: 50, height: 50 }}
+          source={require("../assets/images/favicon.png")}
+        />
+      </View>
       <Button
         title="Go Home"
         onPress={() => {
           navigation.navigate("Home");
         }}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
