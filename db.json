@@ -1,0 +1,34 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Sản phẩm 1",
+      "price": 100,
+      "description": "Mô tả sản phẩm 1"
+    },
+    {
+      "id": 2,
+      "name": "Sản phẩm 2",
+      "price": 200,
+      "description": "Mô tả sản phẩm 2"
+    },
+    {
+      "id": 3,
+      "name": "Sản phẩm 3",
+      "price": 300,
+      "description": "Mô tả sản phẩm 3"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Người dùng 1",
+      "email": "user1@example.com"
+    },
+    {
+      "id": 2,
+      "name": "Người dùng 2",
+      "email": "user2@example.com"
+    }
+  ]
+}
