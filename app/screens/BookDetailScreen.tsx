@@ -2,205 +2,27 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
   SafeAreaView,
-  Image,
   ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+  Dimensions,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBooks } from "../navigation/BookContext";
+import styles from "../styles/BookDetailScreen.styles";
+
+const { width } = Dimensions.get("window");
 
 const BookDetailScreen = ({ route, navigation }: any) => {
   const { borrowBook, addToWishlist, isBookInWishlist, isBookBorrowed } =
     useBooks();
 
-  // Nhận thông tin sách từ route params
-  const initialBookRef = React.useRef(route?.params?.book);
-  const [book, setBook] = React.useState(initialBookRef.current || null);
-  const [fetched, setFetched] = React.useState(false);
-
-  // State cho thông tin mô tả
-  const [khuVuc, setKhuVuc] = React.useState("");
-  const [nhaXuatBan, setNhaXuatBan] = React.useState("");
-  const [theLoai, setTheLoai] = React.useState("");
-  const [isLoadingDescriptive, setIsLoadingDescriptive] = React.useState(false);
-
-  React.useEffect(() => {
-    const fetchBookDetail = async () => {
-      if (fetched) return; // Đã fetch rồi, không fetch lại
-      const initialBook = initialBookRef.current;
-      if (initialBook?.id || initialBook?.ma_sach) {
-        const bookId = initialBook.id || initialBook.ma_sach;
-        try {
-          const token = await AsyncStorage.getItem("userToken");
-          const response = await fetch(
-            `http://160.250.132.142/api/sach/${bookId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-              },
-            }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            if (data) {
-              // Handle if data is array
-              const bookData = Array.isArray(data) ? data[0] : data;
-              setBook(bookData);
-            } else {
-              console.error("API returned null data");
-            }
-            setFetched(true);
-          } else {
-            console.error("Failed to fetch book detail:", response.status);
-            setFetched(true); // Đánh dấu đã thử fetch, dù thất bại
-          }
-        } catch (error) {
-          console.error("Error fetching book detail:", error);
-          setFetched(true); // Đánh dấu đã thử fetch, dù thất bại
-        }
-      } else {
-        setFetched(true); // Không có bookId, đánh dấu đã xử lý
-      }
-    };
-    fetchBookDetail();
-  }, [fetched]); // Loại bỏ route?.params?.book khỏi dependency
-
-  // Fetch thông tin mô tả sau khi có book
-  React.useEffect(() => {
-    if (!book) return;
-
-    console.log("Book object:", book); // Debug: log book object
-
-    const fetchDescriptiveInfo = async () => {
-      setIsLoadingDescriptive(true);
-      const token = await AsyncStorage.getItem("userToken");
-      console.log("Token:", token); // Debug: log token
-
-      const fetchPromises = [];
-
-      // Fetch khu vực
-      if (book.ma_khu_vuc) {
-        fetchPromises.push(
-          fetch(`http://160.250.132.142/api/khu_vuc/${book.ma_khu_vuc}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-            .then((response) => {
-              console.log("Khu vực response status:", response.status);
-              if (response.ok) {
-                return response.json();
-              } else {
-                throw new Error(`Failed to fetch khu vực: ${response.status}`);
-              }
-            })
-            .then((data) => {
-              console.log("Khu vực data:", data);
-              const khuVucData = Array.isArray(data) ? data[0] : data;
-              setKhuVuc(
-                khuVucData.ten_khu_vuc ||
-                  khuVucData.name ||
-                  "Dữ liệu chưa lấy được"
-              );
-            })
-            .catch((error) => {
-              console.error("Error fetching khu vực:", error);
-              setKhuVuc("Dữ liệu chưa lấy được");
-            })
-        );
-      } else {
-        setKhuVuc("Dữ liệu chưa lấy được");
-      }
-
-      // Fetch nhà xuất bản
-      if (book.ma_nxb) {
-        fetchPromises.push(
-          fetch(`http://160.250.132.142/api/nha_xuat_ban/${book.ma_nxb}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-            .then((response) => {
-              console.log("Nha xuat ban response status:", response.status);
-              if (response.ok) {
-                return response.json();
-              } else {
-                throw new Error(
-                  `Failed to fetch nha xuat ban: ${response.status}`
-                );
-              }
-            })
-            .then((data) => {
-              console.log("Nha xuat ban data:", data);
-              const nhaXuatBanData = Array.isArray(data) ? data[0] : data;
-              setNhaXuatBan(
-                nhaXuatBanData.ten_nxb ||
-                  nhaXuatBanData.name ||
-                  "Dữ liệu chưa lấy được"
-              );
-            })
-            .catch((error) => {
-              console.error("Error fetching nhà xuất bản:", error);
-              setNhaXuatBan("Dữ liệu chưa lấy được");
-            })
-        );
-      } else {
-        setNhaXuatBan("Dữ liệu chưa lấy được");
-      }
-
-      // Fetch thể loại
-      if (book.ma_the_loai) {
-        fetchPromises.push(
-          fetch(`http://160.250.132.142/api/the_loai/${book.ma_the_loai}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-            .then((response) => {
-              console.log("The loai response status:", response.status);
-              if (response.ok) {
-                return response.json();
-              } else {
-                throw new Error(`Failed to fetch the loai: ${response.status}`);
-              }
-            })
-            .then((data) => {
-              console.log("The loai data:", data);
-              const theLoaiData = Array.isArray(data) ? data[0] : data;
-              setTheLoai(
-                theLoaiData.ten_the_loai ||
-                  theLoaiData.name ||
-                  "Dữ liệu chưa lấy được"
-              );
-            })
-            .catch((error) => {
-              console.error("Error fetching thể loại:", error);
-              setTheLoai("Dữ liệu chưa lấy được");
-            })
-        );
-      } else {
-        setTheLoai("Dữ liệu chưa lấy được");
-      }
-
-      try {
-        await Promise.all(fetchPromises);
-      } catch (error) {
-        console.error("Error in batch fetch:", error);
-      } finally {
-        setIsLoadingDescriptive(false);
-      }
-    };
-
-    fetchDescriptiveInfo();
-  }, [book]);
+  const book = route?.params?.book;
 
   if (!book) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.loadingContainer}>
         <Text>Đang tải thông tin sách...</Text>
       </View>
     );
@@ -251,284 +73,223 @@ const BookDetailScreen = ({ route, navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Status Bar */}
+
+      {/* Navigation Bar */}
+      <View style={styles.navigationBar}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.navButtonLeft}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.navButtonText}>← Quay lại</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Chi Tiết Sách
-        </Text>
-        <View style={styles.headerRight} />
+        <Text style={styles.navTitle}>Chi tiết sách</Text>
       </View>
 
       <ScrollView
-        style={styles.scrollContainer}
+        style={styles.contentArea}
         showsVerticalScrollIndicator={false}
       >
-        {/* Book Image and Basic Info */}
+        {/* Book Header */}
         <View style={styles.bookHeader}>
-          <Image
-            source={
-              book.hinh_bia
-                ? { uri: "http://160.250.132.142/uploads/" + book.hinh_bia }
-                : require("../../assets/images/adaptive-icon.png")
-            }
-            style={styles.bookImage}
-          />
-          <View style={styles.bookBasicInfo}>
-            <Text style={styles.title}>{book.tieu_de}</Text>
-            <Text style={styles.author}>Tác giả: {book.tac_gia}</Text>
-            <Text style={styles.category}>
-              Thể loại: {theLoai || "Dữ liệu chưa lấy được"}
-            </Text>
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusLabel}>Trạng thái: </Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  book.so_luong > 0 ? styles.available : styles.unavailable,
-                ]}
-              >
-                {book.so_luong > 0 ? "Có sẵn" : "Không có sẵn"}
+          <View style={styles.bookImageWrapper}>
+            <Image
+              source={
+                book.hinh_bia
+                  ? { uri: "http://160.250.132.142/uploads/" + book.hinh_bia }
+                  : require("../../assets/images/adaptive-icon.png")
+              }
+              style={styles.bookImage}
+            />
+          </View>
+          <View style={styles.bookInfo}>
+            <Text style={styles.bookTitle}>{book.tieu_de}</Text>
+            <Text style={styles.bookAuthor}>{book.tac_gia}</Text>
+            <View style={styles.ratingRow}>
+              <Text style={styles.star}>⭐</Text>
+              <Text style={styles.ratingValue}>4.8</Text>
+              <Text style={styles.ratingCount}>(124 đánh giá)</Text>
+            </View>
+            <View style={styles.tagsRow}>
+              <Text style={styles.tag}>Công nghệ</Text>
+              <Text style={[styles.tag, styles.tagAvailable]}>Có sẵn</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Quick Info */}
+        <View style={styles.quickInfoCard}>
+          <View style={styles.quickInfoItem}>
+            <Text style={styles.quickInfoValue}>3/5</Text>
+            <Text style={styles.quickInfoLabel}>Có sẵn</Text>
+          </View>
+          <View style={styles.quickInfoItem}>
+            <Text style={styles.quickInfoValue}>456</Text>
+            <Text style={styles.quickInfoLabel}>Trang</Text>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity style={styles.buttonSuccess} onPress={handleBorrow}>
+            <Text style={styles.buttonSuccessText}>📚 Mượn sách</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonSecondary}>
+            <Text style={styles.buttonSecondaryText}>❤️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonSecondary}>
+            <Text style={styles.buttonSecondaryText}>🔗</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Book Details List */}
+        <View style={styles.detailsList}>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconBlue]}>
+              <Text>🏷️</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>ISBN</Text>
+              <Text style={styles.detailsValue}>{book.ISBN}</Text>
+            </View>
+          </View>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconGreen]}>
+              <Text>🏢</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>Nhà xuất bản</Text>
+              <Text style={styles.detailsValue}>
+                {book.nha_xuat_ban || "Chưa có"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconOrange]}>
+              <Text>📅</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>Năm xuất bản</Text>
+              <Text style={styles.detailsValue}>{book.nam_xuat_ban}</Text>
+            </View>
+          </View>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconPurple]}>
+              <Text>📍</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>Vị trí</Text>
+              <Text style={styles.detailsValue}>
+                {book.vi_tri || "Chưa có"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconPink]}>
+              <Text>🌐</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>Ngôn ngữ</Text>
+              <Text style={styles.detailsValue}>
+                {book.ngon_ngu || "Chưa có"}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.detailsListItem}>
+            <View style={[styles.iconCircle, styles.iconRed]}>
+              <Text>💰</Text>
+            </View>
+            <View style={styles.detailsText}>
+              <Text style={styles.detailsLabel}>Giá bìa</Text>
+              <Text style={styles.detailsValue}>
+                {book.gia_bia || "Chưa có"}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Detailed Information */}
-        <View style={styles.detailsContainer}>
-          <Text style={styles.sectionTitle}>Thông Tin Chi Tiết</Text>
-          {isLoadingDescriptive && (
-            <Text style={styles.loadingText}>
-              Đang tải thông tin chi tiết...
-            </Text>
-          )}
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Nhà xuất bản:</Text>
-            <Text style={styles.detailValue}>
-              {nhaXuatBan || "Dữ liệu chưa lấy được"}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Năm xuất bản:</Text>
-            <Text style={styles.detailValue}>{book.nam_xuat_ban}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Số trang:</Text>
-            <Text style={styles.detailValue}>{book.so_trang}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>ISBN:</Text>
-            <Text style={styles.detailValue}>{book.ISBN}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Vị trí:</Text>
-            <Text style={styles.detailValue}>
-              {khuVuc || "Dữ liệu chưa lấy được"}
-            </Text>
-          </View>
-        </View>
-
         {/* Description */}
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.sectionTitle}>Mô tả sách</Text>
-          <Text style={styles.description}>{book.mo_ta}</Text>
+        <View style={styles.descriptionSection}>
+          <Text style={styles.sectionHeader}>Mô tả</Text>
+          <Text style={styles.descriptionText}>{book.mo_ta}</Text>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleBorrow}>
-            <Text style={styles.primaryButtonText}>Mượn Sách</Text>
-          </TouchableOpacity>
+        {/* Tags */}
+        <View style={styles.tagsSection}>
+          <Text style={styles.sectionHeader}>Từ khóa</Text>
+          <View style={styles.tagsContainer}>
+            {book.tags?.map((tag: string, index: number) => (
+              <View key={index} style={styles.tagItem}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={handleAddToWishlist}
-          >
-            <Text style={styles.secondaryButtonText}>Thêm vào Yêu Thích</Text>
-          </TouchableOpacity>
+        {/* Reviews */}
+        <View style={styles.reviewsSection}>
+          <Text style={styles.sectionHeader}>Đánh giá gần đây</Text>
+          {/* Mock reviews */}
+          <View style={styles.reviewItem}>
+            <View style={[styles.reviewAvatar, styles.iconBlue]}>
+              <Text style={styles.reviewAvatarText}>TH</Text>
+            </View>
+            <View style={styles.reviewContent}>
+              <Text style={styles.reviewAuthor}>Trần Hải</Text>
+              <Text style={styles.reviewRating}>⭐⭐⭐⭐⭐</Text>
+              <Text style={styles.reviewDate}>2 ngày trước</Text>
+              <Text style={styles.reviewText}>
+                Sách rất hay và dễ hiểu. Các ví dụ thực tế giúp mình áp dụng
+                ngay vào dự án. Recommend!
+              </Text>
+            </View>
+          </View>
+          <View style={styles.reviewItem}>
+            <View style={[styles.reviewAvatar, styles.iconGreen]}>
+              <Text style={styles.reviewAvatarText}>NL</Text>
+            </View>
+            <View style={styles.reviewContent}>
+              <Text style={styles.reviewAuthor}>Nguyễn Linh</Text>
+              <Text style={styles.reviewRating}>⭐⭐⭐⭐⭐</Text>
+              <Text style={styles.reviewDate}>1 tuần trước</Text>
+              <Text style={styles.reviewText}>
+                Nội dung cập nhật, phù hợp cho cả người mới bắt đầu và có kinh
+                nghiệm.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Related Books */}
+        <View style={styles.relatedBooksSection}>
+          <Text style={styles.sectionHeader}>Sách liên quan</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.relatedBookItem}>
+              <View style={[styles.relatedBookCover, styles.iconOrange]}>
+                <Text style={styles.relatedBookEmoji}>💻</Text>
+              </View>
+              <Text style={styles.relatedBookTitle}>JavaScript Guide</Text>
+              <Text style={styles.relatedBookRating}>⭐ 4.6</Text>
+            </View>
+            <View style={styles.relatedBookItem}>
+              <View style={[styles.relatedBookCover, styles.iconPurple]}>
+                <Text style={styles.relatedBookEmoji}>🎨</Text>
+              </View>
+              <Text style={styles.relatedBookTitle}>UI/UX Design</Text>
+              <Text style={styles.relatedBookRating}>⭐ 4.7</Text>
+            </View>
+            <View style={styles.relatedBookItem}>
+              <View style={[styles.relatedBookCover, styles.iconPink]}>
+                <Text style={styles.relatedBookEmoji}>🤖</Text>
+              </View>
+              <Text style={styles.relatedBookTitle}>Machine Learning</Text>
+              <Text style={styles.relatedBookRating}>⭐ 4.5</Text>
+            </View>
+          </ScrollView>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    backgroundColor: "#fff",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f8f9fa",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  backButtonText: {
-    fontSize: 20,
-    color: "#007bff",
-    fontWeight: "bold",
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
-    marginHorizontal: 10,
-  },
-  headerRight: {
-    width: 40,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  bookHeader: {
-    flexDirection: "row",
-    padding: 20,
-    backgroundColor: "#f8f9fa",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  bookImage: {
-    width: 120,
-    height: 180,
-    borderRadius: 8,
-    marginRight: 15,
-  },
-  bookBasicInfo: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  author: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 4,
-  },
-  category: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 8,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statusLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  statusValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  available: {
-    color: "#28a745",
-  },
-  unavailable: {
-    color: "#dc3545",
-  },
-  detailsContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  detailLabel: {
-    fontSize: 16,
-    color: "#666",
-    flex: 1,
-  },
-  detailValue: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
-    flex: 1,
-    textAlign: "right",
-  },
-  descriptionContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  description: {
-    fontSize: 16,
-    color: "#666",
-    lineHeight: 24,
-  },
-  actionsContainer: {
-    padding: 20,
-  },
-  primaryButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  secondaryButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#007bff",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: "#007bff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});
 
 export default BookDetailScreen;

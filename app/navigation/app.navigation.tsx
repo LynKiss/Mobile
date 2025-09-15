@@ -1,5 +1,9 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {
+  createNavigationContainerRef,
+  CommonActions,
+} from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthStack from "./AuthStack";
 import MainTab from "./MainTab";
@@ -17,6 +21,8 @@ import ManHinhDanhSachDoc from "../screens/ManHinhDanhSachDoc";
 import ToastNotification from "../components/ToastNotification";
 import { BookProvider } from "./BookContext";
 import { useNotifications } from "../contexts/NotificationContext";
+
+export const navigationRef = createNavigationContainerRef();
 
 const Stack = createNativeStackNavigator();
 
@@ -165,10 +171,27 @@ const AppNavigation = () => {
   // Hàm đăng xuất
   const logout = async (): Promise<void> => {
     try {
-      await AsyncStorage.removeItem("userToken");
-      await AsyncStorage.removeItem("userData");
+      console.log("Starting logout...");
+      // Xóa tất cả dữ liệu AsyncStorage
+      await AsyncStorage.clear();
+      console.log("AsyncStorage cleared");
       setIsLoggedIn(false);
       setUser(null);
+      console.log("State updated");
+      // Reset navigation to AuthStack
+      setTimeout(() => {
+        if (navigationRef.isReady()) {
+          console.log("Resetting navigation");
+          navigationRef.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: "AuthStack" }],
+            })
+          );
+        } else {
+          console.log("Navigation not ready");
+        }
+      }, 100);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -192,48 +215,34 @@ const AppNavigation = () => {
         }}
       >
         <Stack.Navigator
+          key={isLoggedIn ? "loggedIn" : "loggedOut"}
           screenOptions={{
             headerShown: false, // Ẩn header mặc định
           }}
+          initialRouteName={isLoggedIn ? "MainTab" : "AuthStack"}
         >
-          {!isLoggedIn ? (
-            // Nếu chưa đăng nhập, hiển thị AuthStack
-            <Stack.Screen name="AuthStack" component={AuthStack} />
-          ) : (
-            // Nếu đã đăng nhập, hiển thị MainTab
-            <>
-              <Stack.Screen name="MainTab" component={MainTab} />
-              <Stack.Screen name="BookDetail" component={BookDetailScreen} />
-              <Stack.Screen
-                name="Notification"
-                component={NotificationScreen}
-              />
-              <Stack.Screen
-                name="ManHinhThanhToan"
-                component={ManHinhThanhToan}
-              />
-              <Stack.Screen
-                name="ManHinhDocSachDienTu"
-                component={ManHinhDocSachDienTu}
-              />
-              <Stack.Screen name="ManHinhChat" component={ManHinhChat} />
-              <Stack.Screen name="ManHinhDanhGia" component={ManHinhDanhGia} />
-              <Stack.Screen
-                name="ManHinhQuanLyDatCho"
-                component={ManHinhQuanLyDatCho}
-              />
-              <Stack.Screen name="ManHinhPhat" component={ManHinhPhat} />
-              <Stack.Screen
-                name="ManHinhThanhTich"
-                component={ManHinhThanhTich}
-              />
-              <Stack.Screen name="ManHinhSuKien" component={ManHinhSuKien} />
-              <Stack.Screen
-                name="ManHinhDanhSachDoc"
-                component={ManHinhDanhSachDoc}
-              />
-            </>
-          )}
+          <Stack.Screen name="AuthStack" component={AuthStack} />
+          <Stack.Screen name="MainTab" component={MainTab} />
+          <Stack.Screen name="BookDetail" component={BookDetailScreen} />
+          <Stack.Screen name="Notification" component={NotificationScreen} />
+          <Stack.Screen name="ManHinhThanhToan" component={ManHinhThanhToan} />
+          <Stack.Screen
+            name="ManHinhDocSachDienTu"
+            component={ManHinhDocSachDienTu}
+          />
+          <Stack.Screen name="ManHinhChat" component={ManHinhChat} />
+          <Stack.Screen name="ManHinhDanhGia" component={ManHinhDanhGia} />
+          <Stack.Screen
+            name="ManHinhQuanLyDatCho"
+            component={ManHinhQuanLyDatCho}
+          />
+          <Stack.Screen name="ManHinhPhat" component={ManHinhPhat} />
+          <Stack.Screen name="ManHinhThanhTich" component={ManHinhThanhTich} />
+          <Stack.Screen name="ManHinhSuKien" component={ManHinhSuKien} />
+          <Stack.Screen
+            name="ManHinhDanhSachDoc"
+            component={ManHinhDanhSachDoc}
+          />
         </Stack.Navigator>
       </AuthContext.Provider>
     </BookProvider>

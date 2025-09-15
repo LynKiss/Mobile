@@ -1,244 +1,281 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  Dimensions,
-  ScrollView,
-} from "react-native";
-import { useTheme } from "../contexts/ThemeContext";
+import React from "react";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import GradientView from "../components/GradientView";
+import styles from "../styles/HomeScreen.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { width } = Dimensions.get("window");
-
-const normalizeBook = (raw: any) => ({
-  id: raw.ma_sach,
-  title: raw.ten_sach,
-  author: raw.tac_gia,
-  category: raw.ma_the_loai,
-  publisher: raw.ma_nxb,
-  year: raw.nam_xuat_ban,
-  pages: raw.so_trang,
-  isbn: raw.isbn,
-  location: raw.ma_khu_vuc,
-  quantity: raw.so_luong,
-  description: raw.mo_ta,
-  image: raw.hinh_anh
-    ? { uri: "http://160.250.132.142/uploads/" + raw.hinh_anh }
-    : require("../../assets/images/adaptive-icon.png"),
-});
-
 const HomeScreen = ({ navigation }: any) => {
-  const { theme } = useTheme();
-  const [books, setBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  const fetchBooks = async () => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem("userToken");
-      const response = await fetch("http://160.250.132.142/api/sach", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setBooks(data.map((b: any) => normalizeBook(b)));
-      }
-    } catch (error) {
-      console.error("Error fetching books:", error);
-    } finally {
-      setLoading(false);
-    }
+  const currentUser = {
+    name: "Nguyễn Văn A",
+    avatar: "https://i.pravatar.cc/120",
+    membershipType: "vip",
+    readingStreak: 15,
+    borrowedBooks: 3,
+    totalBorrowed: 24,
+    wishlist: 5,
   };
 
-  const renderBookCard = ({ item }: any) => (
-    <TouchableOpacity
-      style={[styles.bookCard, { backgroundColor: theme.colors.surface }]}
-      onPress={() => navigation.navigate("BookDetail", { book: item })}
-    >
-      <Image source={item.image} style={styles.bookImage} />
-      <View style={styles.bookInfo}>
-        <Text
-          style={[styles.bookTitle, { color: theme.colors.text }]}
-          numberOfLines={2}
-        >
-          {item.title}
-        </Text>
-        <Text
-          style={[styles.bookAuthor, { color: theme.colors.textSecondary }]}
-          numberOfLines={1}
-        >
-          {item.author}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const featuredBooks = [
+    {
+      id: 1,
+      title: "Lập trình React Native",
+      author: "Nguyễn Văn B",
+      available: true,
+      rating: 4.8,
+      reviews: 124,
+      spineColor: ["#f87171", "#dc2626"],
+      icon: "📖",
+    },
+    {
+      id: 2,
+      title: "Mobile App Development",
+      author: "John Smith",
+      available: false,
+      left: 2,
+      rating: 4.6,
+      reviews: 89,
+      spineColor: ["#60a5fa", "#2563eb"],
+      icon: "📱",
+    },
+  ];
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 120 }}
+      showsVerticalScrollIndicator={false}
     >
-      {/* Banner */}
-      <View style={[styles.banner, { backgroundColor: theme.colors.primary }]}>
-        <Text style={styles.bannerText}>
-          📚 Chào mừng bạn đến với Thư viện Quốc gia
-        </Text>
+      {/* Welcome Card */}
+      <GradientView colors={["#3b82f6", "#7c3aed"]} style={styles.welcomeCard}>
+        <View style={styles.welcomeTop}>
+          <View>
+            <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
+            <View style={styles.onlineDot} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 35 }}>
+            <Text style={styles.welcomeTitle}>Chào mừng trở lại!</Text>
+            <Text style={styles.welcomeName}>{currentUser.name}</Text>
+            <View style={styles.badgesRow}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  🏆 {currentUser.membershipType === "vip" ? "VIP" : "Member"}
+                </Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  🔥 Streak {currentUser.readingStreak} ngày
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View
+            style={[
+              styles.statBox,
+              { backgroundColor: "rgba(255,255,255,0.1)" },
+            ]}
+          >
+            <Text style={[styles.statNum, { color: "#facc15" }]}>
+              {currentUser.borrowedBooks}
+            </Text>
+            <Text style={styles.statLabel}>📚 Đang mượn</Text>
+            <Text style={styles.statSub}>Tối đa 5 cuốn</Text>
+          </View>
+          <View
+            style={[
+              styles.statBox,
+              { backgroundColor: "rgba(255,255,255,0.1)" },
+            ]}
+          >
+            <Text style={[styles.statNum, { color: "#22d3ee" }]}>
+              {currentUser.totalBorrowed}
+            </Text>
+            <Text style={styles.statLabel}>✅ Đã mượn</Text>
+            <Text style={styles.statSub}>Tổng cộng</Text>
+          </View>
+          <View
+            style={[
+              styles.statBox,
+              { backgroundColor: "rgba(255,255,255,0.1)" },
+            ]}
+          >
+            <Text style={[styles.statNum, { color: "#ec4899" }]}>
+              {currentUser.wishlist}
+            </Text>
+            <Text style={styles.statLabel}>❤️ Yêu thích</Text>
+            <Text style={styles.statSub}>Danh sách</Text>
+          </View>
+        </View>
+      </GradientView>
+
+      {/* Featured Books */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📚 Sách nổi bật</Text>
+          <TouchableOpacity>
+            <Text style={styles.sectionLink}>Xem tất cả ›</Text>
+          </TouchableOpacity>
+        </View>
+        {featuredBooks.map((book) => (
+          <View key={book.id} style={styles.bookCard}>
+            <GradientView colors={book.spineColor} style={styles.bookSpine}>
+              <Text style={styles.spineIcon}>{book.icon}</Text>
+            </GradientView>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bookTitle}>{book.title}</Text>
+              <Text style={styles.bookAuthor}>✍️ {book.author}</Text>
+              <View style={styles.bookMeta}>
+                <Text
+                  style={[
+                    styles.bookStatus,
+                    { backgroundColor: book.available ? "#dcfce7" : "#ffedd5" },
+                  ]}
+                >
+                  {book.available ? "✅ Có sẵn" : `⏳ Còn ${book.left} cuốn`}
+                </Text>
+                <Text style={styles.bookRating}>
+                  ⭐ {book.rating} ({book.reviews})
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.borrowBtn}>
+                <Text style={styles.borrowBtnText}>Mượn ngay</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
       </View>
 
-      {/* Thông báo nhanh */}
-      <View
-        style={[styles.notification, { backgroundColor: theme.colors.surface }]}
+      {/* Important Notice */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🔔 Thông báo quan trọng</Text>
+        <View style={styles.noticeCard}>
+          <View style={styles.noticeIcon}>
+            <Text style={{ color: "#fff", fontWeight: "bold" }}>!</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: "600", marginBottom: 4 }}>
+              Nhắc nhở quan trọng
+            </Text>
+            <Text>Sách "JavaScript cơ bản" sẽ hết hạn trong 2 ngày nữa</Text>
+            <TouchableOpacity style={styles.noticeBtn}>
+              <Text style={styles.noticeBtnText}>Gia hạn ngay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* AI Recommendations */}
+      <GradientView
+        colors={["#a855f7", "#ec4899", "#ef4444"]}
+        style={styles.aiCard}
       >
-        <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>
-          🔔 Thông báo
-        </Text>
-        <Text
-          style={[
-            styles.notificationItem,
-            { color: theme.colors.textSecondary },
-          ]}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
         >
-          - Hạn trả sách: 3 cuốn
-        </Text>
-        <Text
-          style={[
-            styles.notificationItem,
-            { color: theme.colors.textSecondary },
-          ]}
-        >
-          - Sách sắp hết: 2 cuốn
-        </Text>
+          <View style={styles.aiIcon}>
+            <Text style={{ fontSize: 20 }}>🤖</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff" }}>
+              AI Gợi ý cho bạn
+            </Text>
+            <Text style={{ color: "#fff", opacity: 0.9 }}>
+              Dựa trên sở thích đọc của bạn
+            </Text>
+          </View>
+        </View>
+        <View style={styles.aiBook}>
+          <View style={styles.aiBookSpine}>
+            <Text style={{ color: "#fff" }}>🧠</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: "700", color: "#fff" }}>
+              Machine Learning cơ bản
+            </Text>
+            <Text style={{ color: "#fff", opacity: 0.9 }}>
+              Phù hợp với lịch sử đọc của bạn
+            </Text>
+            <View style={{ flexDirection: "row", marginTop: 4 }}>
+              <Text style={styles.aiBadge}>⭐ 4.9</Text>
+              <Text style={styles.aiBadge}>🔥 Trending</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.aiBtn}>
+            <Text style={{ color: "#fff" }}>Xem ngay</Text>
+          </TouchableOpacity>
+        </View>
+      </GradientView>
+
+      {/* Goals & Rank */}
+      <View style={styles.row}>
+        <GradientView colors={["#3b82f6", "#9333ea"]} style={styles.goalCard}>
+          <Text style={{ fontSize: 28 }}>🎯</Text>
+          <Text style={styles.goalTitle}>Mục tiêu tháng</Text>
+          <Text style={{ color: "#fff", opacity: 0.9 }}>8/10 cuốn</Text>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: "80%" }]} />
+          </View>
+          <Text style={styles.goalSub}>Còn 2 cuốn nữa! 💪</Text>
+        </GradientView>
+        <GradientView colors={["#facc15", "#f97316"]} style={styles.goalCard}>
+          <Text style={{ fontSize: 28 }}>🏆</Text>
+          <Text style={styles.goalTitle}>Hạng độc giả</Text>
+          <Text style={{ color: "#fff", opacity: 0.9 }}>Bạc</Text>
+          <Text style={styles.rankSub}>Còn 6 cuốn để lên Vàng</Text>
+
+          <View style={styles.rankDots}>
+            <View style={[styles.rankDot, { backgroundColor: "#facc15" }]} />
+            <View style={[styles.rankDot, { backgroundColor: "#facc15" }]} />
+            <View style={[styles.rankDot, { backgroundColor: "#facc15" }]} />
+            <View
+              style={[
+                styles.rankDot,
+                { backgroundColor: "rgba(255,255,255,0.3)" },
+              ]}
+            />
+            <View
+              style={[
+                styles.rankDot,
+                { backgroundColor: "rgba(255,255,255,0.3)" },
+              ]}
+            />
+          </View>
+        </GradientView>
       </View>
 
-      {/* Sách nổi bật */}
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          🔥 Sách nổi bật
-        </Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Search", { featuredOnly: true })}
-        >
-          <Text style={[styles.viewAll, { color: theme.colors.primary }]}>
-            Xem tất cả
-          </Text>
-        </TouchableOpacity>
+      {/* Quick Actions */}
+      <View style={styles.quickCard}>
+        <Text style={styles.quickTitle}>⚡ Thao tác nhanh</Text>
+        <View style={styles.quickRow}>
+          <TouchableOpacity
+            style={[styles.quickBtn, { backgroundColor: "#dbeafe" }]}
+          >
+            <Text style={styles.quickIcon}>🔍</Text>
+            <View>
+              <Text style={styles.quickLabel}>Tìm sách</Text>
+              <Text style={styles.quickSub}>Khám phá ngay</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.quickBtn, { backgroundColor: "#dcfce7" }]}
+          >
+            <Text style={styles.quickIcon}>📚</Text>
+            <View>
+              <Text style={styles.quickLabel}>Sách mượn</Text>
+              <Text style={styles.quickSub}>Quản lý</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.primary}
-          style={{ marginTop: 20 }}
-        />
-      ) : (
-        <FlatList
-          data={books.slice(0, 6)}
-          renderItem={renderBookCard}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          scrollEnabled={false} // để scroll bằng ScrollView
-        />
-      )}
-
-      {/* Có thể thêm mục “Đề xuất cho bạn” */}
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          ✨ Đề xuất cho bạn
-        </Text>
-      </View>
-      <FlatList
-        data={books.slice(6, 10)}
-        renderItem={renderBookCard}
-        keyExtractor={(item) => "rec-" + item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 30 }}
-      />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  banner: {
-    padding: 16,
-    borderRadius: 12,
-    margin: 12,
-    alignItems: "center",
-  },
-  bannerText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  notification: {
-    marginHorizontal: 12,
-    marginBottom: 15,
-    padding: 14,
-    borderRadius: 12,
-    elevation: 3,
-  },
-  notificationTitle: {
-    fontWeight: "bold",
-    fontSize: 15,
-    marginBottom: 6,
-  },
-  notificationItem: {
-    fontSize: 13,
-    marginBottom: 3,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 12,
-    marginVertical: 8,
-    alignItems: "center",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  viewAll: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  bookCard: {
-    width: (width - 40) / 2,
-    marginBottom: 15,
-    borderRadius: 12,
-    overflow: "hidden",
-    elevation: 4,
-  },
-  bookImage: {
-    width: "100%",
-    height: 150,
-    resizeMode: "cover",
-  },
-  bookInfo: {
-    padding: 10,
-  },
-  bookTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  bookAuthor: {
-    fontSize: 12,
-  },
-});
 
 export default HomeScreen;

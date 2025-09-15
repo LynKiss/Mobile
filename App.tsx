@@ -7,7 +7,7 @@ import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { OPENSAN_REGULAR } from "./untils/const";
 import "react-native-gesture-handler";
-import AppNavigation from "./app/navigation/app.navigation";
+import AppNavigation, { navigationRef } from "./app/navigation/app.navigation";
 import { ThemeProvider } from "./app/contexts/ThemeContext";
 import { NotificationProvider } from "./app/contexts/NotificationContext";
 import AppWrapper from "./app/components/AppWrapper";
@@ -34,7 +34,7 @@ function App() {
       <SafeAreaView style={{ flex: 1 }}>
         <ThemeProvider>
           <NotificationProvider>
-            <NavigationContainer>
+            <NavigationContainer ref={navigationRef}>
               <AppWrapper>
                 <AppNavigation />
               </AppWrapper>

@@ -2,7 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View } from "react-native";
-import HomeScreen from "../screens/HomeScreen";
+import { default as HomeScreen } from "../screens/HomeScreen";
 import SearchScreen from "../screens/SearchScreen";
 import BorrowScreen from "../screens/BorrowScreen";
 import WishlistScreen from "../screens/WishlistScreen";

@@ -28,21 +28,15 @@ const ProfileScreen = ({ navigation }: any) => {
     overdueBooks: 1,
   };
 
-  const handleLogout = () => {
-    Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất không?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Đăng xuất",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await logout();
-          } catch (error) {
-            Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất");
-          }
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    console.log("handleLogout called");
+    try {
+      await logout();
+      console.log("Logout completed");
+    } catch (error) {
+      console.error("Logout error:", error);
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất");
+    }
   };
 
   const handleEditProfile = () => {

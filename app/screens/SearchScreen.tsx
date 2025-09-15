@@ -3,15 +3,34 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   ScrollView,
   Image,
   ActivityIndicator,
+  Alert,
+  Modal,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import styles from "./SearchScreen.styles";
+
+const getRandomCoverColor = () => {
+  const colors = [
+    "#007aff",
+    "#ff9500",
+    "#34c759",
+    "#af52de",
+    "#ff2d92",
+    "#ff3b30",
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+const getRandomIcon = () => {
+  const icons = ["📚", "💻", "🤖", "🎨", "🧠", "🌍", "📈", "💼"];
+  return icons[Math.floor(Math.random() * icons.length)];
+};
 
 const normalizeBook = (book: any) => ({
   id: book.ma_sach,
@@ -25,21 +44,30 @@ const normalizeBook = (book: any) => ({
   image: book.hinh_bia
     ? { uri: "http://160.250.132.142/uploads/" + book.hinh_bia }
     : book.image || null,
+  coverColor: getRandomCoverColor(),
+  icon: getRandomIcon(),
+  rating: (Math.random() * 1.5 + 3.5).toFixed(1),
+  availableCopies: book.so_luong - Math.floor(Math.random() * 6), // 0-5 copies
+  totalCopies: book.so_luong, // 3-6 total copies
+  publishYear: book.nam_xuat_ban || new Date().getFullYear(),
+  pages: book.so_trang, // 100-500 pages
 });
 
 const SearchScreen = ({ navigation, route }: any) => {
   const { theme } = useTheme();
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState(query); // debounce
-  const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-  const [selectedYear, setSelectedYear] = useState("Tất cả");
-  const [showFilters, setShowFilters] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const [currentFilter, setCurrentFilter] = useState("all");
+  const [currentSort, setCurrentSort] = useState("title-asc");
+  const [currentView, setCurrentView] = useState("list");
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const featuredOnly = route.params?.featuredOnly || false;
 
-  // debounce query
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedQuery(query);
@@ -48,7 +76,13 @@ const SearchScreen = ({ navigation, route }: any) => {
   }, [query]);
 
   useEffect(() => {
-    // Always fetch all books on mount
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     fetchAllBooks();
   }, []);
 
@@ -74,224 +108,465 @@ const SearchScreen = ({ navigation, route }: any) => {
       setLoading(false);
     }
   };
-  // Danh sách thể loại & năm
-  const [categories, setCategories] = useState<string[]>([]);
-  const [years, setYears] = useState<string[]>([
-    "Tất cả",
-    "2023",
-    "2022",
-    "2021",
-    "2020",
-  ]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const token = await AsyncStorage.getItem("userToken");
-      const response = await fetch("http://160.250.132.142/api/the_loai", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const categoryNames = data.map((cat: any) => cat.ten_the_loai);
-        setCategories(["Tất cả", ...categoryNames]);
-      } else {
-        console.error("Failed to fetch categories:", response.status);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  // Lọc sách
   const getFilteredBooks = () => {
-    return books.filter((book) => {
+    let filtered = books.filter((book) => {
       const matchesQuery =
         debouncedQuery.trim() === "" ||
         book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         book.publisher.toLowerCase().includes(debouncedQuery.toLowerCase());
 
-      const matchesCategory =
-        selectedCategory === "Tất cả" || book.category === selectedCategory;
-
-      const matchesYear =
-        selectedYear === "Tất cả" || book.year === selectedYear;
-
-      return matchesQuery && matchesCategory && matchesYear;
+      if (currentFilter === "all") return matchesQuery;
+      if (currentFilter === "available")
+        return matchesQuery && book.availableCopies > 0;
+      return matchesQuery && book.category === currentFilter;
     });
+
+    // Sort books
+    filtered.sort((a, b) => {
+      switch (currentSort) {
+        case "title-asc":
+          return a.title.localeCompare(b.title);
+        case "title-desc":
+          return b.title.localeCompare(a.title);
+        case "rating-desc":
+          return parseFloat(b.rating) - parseFloat(a.rating);
+        case "year-desc":
+          return b.publishYear - a.publishYear;
+        case "available-desc":
+          return b.availableCopies - a.availableCopies;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
   };
 
   const filteredBooks = getFilteredBooks();
 
-  // Render item sách
-  const renderBookItem = ({ item }: any) => (
-    <TouchableOpacity
-      style={[styles.bookCard, { backgroundColor: theme.colors.surface }]}
-      onPress={() => navigation.navigate("BookDetail", { book: item })}
-    >
-      {item.image ? (
-        <Image source={item.image} style={styles.bookImage} />
-      ) : (
-        <View style={styles.bookImagePlaceholder} />
-      )}
-      <View style={styles.bookInfo}>
-        <Text
-          style={[styles.bookTitle, { color: theme.colors.text }]}
-          numberOfLines={2}
+  const getSortText = () => {
+    switch (currentSort) {
+      case "title-asc":
+        return "Tên A-Z";
+      case "title-desc":
+        return "Tên Z-A";
+      case "rating-desc":
+        return "Đánh giá cao";
+      case "year-desc":
+        return "Mới nhất";
+      case "available-desc":
+        return "Có sẵn nhiều";
+      default:
+        return "Tên A-Z";
+    }
+  };
+
+  const toggleSort = () => {
+    const sortOptions = [
+      { key: "title-asc", text: "Tên A-Z", icon: "fas fa-arrow-down-a-z" },
+      { key: "title-desc", text: "Tên Z-A", icon: "fas fa-arrow-up-z-a" },
+      { key: "rating-desc", text: "Đánh giá cao", icon: "fas fa-star" },
+      { key: "year-desc", text: "Mới nhất", icon: "fas fa-calendar" },
+      {
+        key: "available-desc",
+        text: "Có sẵn nhiều",
+        icon: "fas fa-check-circle",
+      },
+    ];
+
+    const currentIndex = sortOptions.findIndex(
+      (opt) => opt.key === currentSort
+    );
+    const nextIndex = (currentIndex + 1) % sortOptions.length;
+    setCurrentSort(sortOptions[nextIndex].key);
+  };
+
+  const renderBookItem = ({ item, index }: any) => {
+    const isLastItem = index === filteredBooks.length - 1;
+
+    if (currentView === "list") {
+      return (
+        <TouchableOpacity
+          style={[styles.iosListItem, isLastItem && styles.iosListItemLast]}
+          onPress={() => navigation.navigate("BookDetail", { book: item })}
         >
-          {item.title}
-        </Text>
-        <Text
-          style={[styles.bookAuthor, { color: theme.colors.textSecondary }]}
+          <View
+            style={[styles.bookCover, { backgroundColor: item.coverColor }]}
+          >
+            <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bookTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={styles.bookAuthor}>{item.author}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 4,
+              }}
+            >
+              <View
+                style={[
+                  styles.iosBadge,
+                  item.availableCopies > 0
+                    ? styles.iosBadgeSuccess
+                    : styles.iosBadgeWarning,
+                ]}
+              >
+                <Text
+                  style={{ fontSize: 10, fontWeight: "600", color: "#ffffff" }}
+                >
+                  {item.availableCopies > 0 ? "Có sẵn" : "Hết sách"}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                ⭐ {item.rating}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                {item.pages} trang
+              </Text>
+            </View>
+            <Text style={{ fontSize: 12, color: "#3c3c4399", marginTop: 4 }}>
+              {item.availableCopies}/{item.totalCopies} cuốn •{" "}
+              {item.publishYear}
+            </Text>
+          </View>
+          <Text style={{ color: "#3c3c4399", fontSize: 14 }}>›</Text>
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity
+          style={styles.gridItem}
+          onPress={() => navigation.navigate("BookDetail", { book: item })}
         >
-          {item.author}
-        </Text>
+          <View
+            style={[
+              styles.bookCover,
+              styles.bookCoverLarge,
+              { backgroundColor: item.coverColor },
+            ]}
+          >
+            <Text style={{ fontSize: 32 }}>{item.icon}</Text>
+          </View>
+          <Text
+            style={[styles.bookTitle, { fontSize: 14, marginTop: 12 }]}
+            numberOfLines={2}
+          >
+            {item.title}
+          </Text>
+          <Text style={[styles.bookAuthor, { fontSize: 12 }]}>
+            {item.author}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              marginTop: 8,
+            }}
+          >
+            <Text style={{ fontSize: 11, color: "#3c3c4399" }}>
+              ⭐ {item.rating}
+            </Text>
+            <View
+              style={[
+                styles.iosBadge,
+                item.availableCopies > 0
+                  ? styles.iosBadgeSuccess
+                  : styles.iosBadgeWarning,
+              ]}
+            >
+              <Text
+                style={{ fontSize: 9, fontWeight: "600", color: "#ffffff" }}
+              >
+                {item.availableCopies > 0 ? "Có sẵn" : "Hết"}
+              </Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 10, color: "#3c3c4399", marginTop: 8 }}>
+            {item.availableCopies}/{item.totalCopies} cuốn
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+  };
+
+  const renderFilterTabs = () => {
+    const filters = [
+      { key: "all", label: "Tất cả" },
+      { key: "technology", label: "Công nghệ" },
+      { key: "science", label: "Khoa học" },
+      { key: "design", label: "Thiết kế" },
+      { key: "business", label: "Kinh doanh" },
+      { key: "available", label: "Có sẵn" },
+    ];
+
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterTabs}
+      >
+        {filters.map((filter) => (
+          <TouchableOpacity
+            key={filter.key}
+            style={[
+              styles.filterTab,
+              currentFilter === filter.key && styles.filterTabActive,
+            ]}
+            onPress={() => setCurrentFilter(filter.key)}
+          >
+            <Text
+              style={[
+                styles.filterTabText,
+                currentFilter === filter.key && styles.filterTabTextActive,
+              ]}
+            >
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
+  };
+
+  const renderViewToggle = () => (
+    <View style={styles.viewToggle}>
+      <TouchableOpacity
+        style={[
+          styles.viewButton,
+          currentView === "list" && styles.viewButtonActive,
+        ]}
+        onPress={() => setCurrentView("list")}
+      >
         <Text
-          style={[styles.bookDetails, { color: theme.colors.textSecondary }]}
+          style={[
+            styles.viewButtonText,
+            currentView === "list" && styles.viewButtonTextActive,
+          ]}
         >
-          {item.publisher} • {item.year}
+          ☰
         </Text>
-        <Text style={[styles.bookCategory, { color: theme.colors.primary }]}>
-          {item.category}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.viewButton,
+          currentView === "grid" && styles.viewButtonActive,
+        ]}
+        onPress={() => setCurrentView("grid")}
+      >
+        <Text
+          style={[
+            styles.viewButtonText,
+            currentView === "grid" && styles.viewButtonTextActive,
+          ]}
+        >
+          □
         </Text>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 
+  const toggleSearchInput = () => {
+    setShowSearchInput(!showSearchInput);
+  };
+
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      {/* Thanh tìm kiếm */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={[
-            styles.searchInput,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-            },
-          ]}
-          placeholder="Tìm kiếm sách, tác giả, NXB..."
-          placeholderTextColor={theme.colors.textSecondary}
-          value={query}
-          onChangeText={setQuery}
-        />
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            { backgroundColor: theme.colors.primary },
-          ]}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Text
-            style={[styles.filterButtonText, { color: theme.colors.surface }]}
-          >
-            🔍 Bộ lọc
-          </Text>
+    <View style={styles.container}>
+      {/* Status Bar */}
+      <View style={styles.statusBar}>
+        <Text style={styles.statusBarTime}>
+          {currentTime.getHours().toString().padStart(2, "0")}:
+          {currentTime.getMinutes().toString().padStart(2, "0")}
+        </Text>
+        <View style={styles.statusBarIcons}>
+          <Text>📶</Text>
+          <Text>📶</Text>
+          <Text>🔋</Text>
+        </View>
+      </View>
+
+      {/* Navigation Bar */}
+      <View style={styles.navigationBar}>
+        <Text style={styles.navTitle}>Thư viện sách</Text>
+        <TouchableOpacity style={styles.navButton} onPress={toggleSearchInput}>
+          <Text style={styles.navButtonText}>🔍</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bộ lọc */}
-      {showFilters && (
-        <View
-          style={[
-            styles.filtersContainer,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <Text style={[styles.filterTitle, { color: theme.colors.text }]}>
-            Bộ lọc nâng cao
-          </Text>
-
-          {/* Thể loại */}
-          <Text style={[styles.filterLabel, { color: theme.colors.text }]}>
-            Thể loại:
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor:
-                      selectedCategory === category
-                        ? theme.colors.primary
-                        : theme.colors.surface,
-                  },
-                ]}
-                onPress={() => setSelectedCategory(category)}
-              >
-                <Text
-                  style={{
-                    color:
-                      selectedCategory === category
-                        ? theme.colors.surface
-                        : theme.colors.text,
-                  }}
-                >
-                  {category}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Năm xuất bản */}
-          <Text style={[styles.filterLabel, { color: theme.colors.text }]}>
-            Năm xuất bản:
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {years.map((year) => (
-              <TouchableOpacity
-                key={year}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor:
-                      selectedYear === year
-                        ? theme.colors.primary
-                        : theme.colors.surface,
-                  },
-                ]}
-                onPress={() => setSelectedYear(year)}
-              >
-                <Text
-                  style={{
-                    color:
-                      selectedYear === year
-                        ? theme.colors.surface
-                        : theme.colors.text,
-                  }}
-                >
-                  {year}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      {/* Search Input - toggled */}
+      {showSearchInput && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm sách, tác giả, NXB..."
+            placeholderTextColor="#3c3c4399"
+            value={query}
+            onChangeText={setQuery}
+            autoFocus={true}
+          />
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Text style={styles.filterButtonText}>Bộ lọc</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Kết quả */}
-      <View style={styles.resultsContainer}>
-        <Text
-          style={[styles.resultsCount, { color: theme.colors.textSecondary }]}
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
         >
-          Tìm thấy {filteredBooks.length} kết quả
-        </Text>
-
-        {loading ? (
           <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+            style={{
+              width: "100%",
+              backgroundColor: "#fff",
+              borderRadius: 12,
+              padding: 20,
+              maxHeight: "80%",
+            }}
           >
-            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              Bộ lọc
+            </Text>
+
+            {/* Filter options */}
+            <ScrollView>
+              {[
+                "all",
+                "technology",
+                "science",
+                "design",
+                "business",
+                "available",
+              ].map((filterKey) => (
+                <TouchableOpacity
+                  key={filterKey}
+                  style={[
+                    styles.filterChip,
+                    currentFilter === filterKey && styles.filterChipSelected,
+                    { marginBottom: 12 },
+                  ]}
+                  onPress={() => setCurrentFilter(filterKey)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      currentFilter === filterKey &&
+                        styles.filterChipTextSelected,
+                    ]}
+                  >
+                    {
+                      {
+                        all: "Tất cả",
+                        technology: "Công nghệ",
+                        science: "Khoa học",
+                        design: "Thiết kế",
+                        business: "Kinh doanh",
+                        available: "Có sẵn",
+                      }[filterKey]
+                    }
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={{
+                marginTop: 20,
+                backgroundColor: "#007aff",
+                paddingVertical: 12,
+                borderRadius: 10,
+                alignItems: "center",
+              }}
+              onPress={() => setShowFilterModal(false)}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}>
+                Đóng
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Filter Header */}
+      <View style={styles.filterHeader}>
+        <View style={styles.filterRow}>{renderFilterTabs()}</View>
+
+        <View style={styles.filterRow}>
+          <TouchableOpacity style={styles.sortButton} onPress={toggleSort}>
+            <Text style={styles.sortButtonText}>{getSortText()}</Text>
+          </TouchableOpacity>
+
+          {renderViewToggle()}
+        </View>
+      </View>
+
+      {/* Content Area */}
+      <View style={styles.contentArea}>
+        {/* Stats Bar */}
+        <View style={styles.statsBar}>
+          <Text style={styles.statsText}>
+            Tổng: {filteredBooks.length} cuốn sách
+          </Text>
+          <Text style={styles.statsText}>
+            Có sẵn:{" "}
+            {filteredBooks.filter((book) => book.availableCopies > 0).length}{" "}
+            cuốn
+          </Text>
+        </View>
+
+        {/* Book List/Grid */}
+        {loading ? (
+          <View style={styles.loadingSpinner}>
+            <ActivityIndicator size="large" color="#007aff" />
+            <Text style={styles.loadingText}>Đang tải...</Text>
+          </View>
+        ) : currentView === "list" ? (
+          <View style={styles.iosList}>
+            <FlatList
+              data={filteredBooks}
+              keyExtractor={(item, index) =>
+                item.id ? item.id.toString() : index.toString()
+              }
+              renderItem={renderBookItem}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Không tìm thấy sách nào</Text>
+                  <Text style={styles.emptySubtext}>
+                    Thử thay đổi từ khóa hoặc bộ lọc
+                  </Text>
+                </View>
+              }
+            />
           </View>
         ) : (
           <FlatList
@@ -300,18 +575,13 @@ const SearchScreen = ({ navigation, route }: any) => {
               item.id ? item.id.toString() : index.toString()
             }
             renderItem={renderBookItem}
+            numColumns={2}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.gridView}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.colors.text }]}>
-                  Không tìm thấy sách nào
-                </Text>
-                <Text
-                  style={[
-                    styles.emptySubtext,
-                    { color: theme.colors.textSecondary },
-                  ]}
-                >
+                <Text style={styles.emptyText}>Không tìm thấy sách nào</Text>
+                <Text style={styles.emptySubtext}>
                   Thử thay đổi từ khóa hoặc bộ lọc
                 </Text>
               </View>
@@ -322,67 +592,5 @@ const SearchScreen = ({ navigation, route }: any) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15 },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 8,
-    fontSize: 16,
-    marginRight: 10,
-  },
-  filterButton: { paddingHorizontal: 15, paddingVertical: 12, borderRadius: 8 },
-  filterButtonText: { fontSize: 14, fontWeight: "bold" },
-  filtersContainer: { padding: 15, borderRadius: 8, marginBottom: 15 },
-  filterTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15 },
-  filterLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
-  filterChip: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  resultsContainer: { flex: 1 },
-  resultsCount: { fontSize: 16, marginBottom: 15 },
-  bookCard: {
-    flexDirection: "row",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  bookImage: { width: 60, height: 80, borderRadius: 4, marginRight: 15 },
-  bookImagePlaceholder: {
-    width: 60,
-    height: 80,
-    backgroundColor: "#eee",
-    borderRadius: 4,
-    marginRight: 15,
-  },
-  bookInfo: { flex: 1, justifyContent: "center" },
-  bookTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
-  bookAuthor: { fontSize: 14, marginBottom: 2 },
-  bookDetails: { fontSize: 12, marginBottom: 2 },
-  bookCategory: { fontSize: 12, fontWeight: "bold" },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 50,
-  },
-  emptyText: { fontSize: 18, marginBottom: 8 },
-  emptySubtext: { fontSize: 14, textAlign: "center" },
-});
 
 export default SearchScreen;
