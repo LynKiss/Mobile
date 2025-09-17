@@ -112,7 +112,7 @@ const LoginScreen = ({ navigation }: any) => {
     setIsLoading(true);
     try {
       // Call API for login
-      const response = await fetch("http://160.250.132.142/api/auth/login", {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

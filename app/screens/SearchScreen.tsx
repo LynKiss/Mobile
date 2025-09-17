@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useBooks } from "../navigation/BookContext";
 import styles from "./SearchScreen.styles";
 
 const getRandomCoverColor = () => {
@@ -42,7 +43,7 @@ const normalizeBook = (book: any) => ({
   category:
     book.ma_the_loai?.toString() || book.the_loai || book.category || "",
   image: book.hinh_bia
-    ? { uri: "http://160.250.132.142/uploads/" + book.hinh_bia }
+    ? { uri: "http://localhost:3000/uploads/" + book.hinh_bia }
     : book.image || null,
   coverColor: getRandomCoverColor(),
   icon: getRandomIcon(),
@@ -65,6 +66,9 @@ const SearchScreen = ({ navigation, route }: any) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // New state for cart count
+  const { getCartTotalItems } = useBooks();
 
   const featuredOnly = route.params?.featuredOnly || false;
 
@@ -90,7 +94,7 @@ const SearchScreen = ({ navigation, route }: any) => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("userToken");
-      const response = await fetch("http://160.250.132.142/api/sach", {
+      const response = await fetch("http://localhost:3000/api/sach", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -190,7 +194,9 @@ const SearchScreen = ({ navigation, route }: any) => {
       return (
         <TouchableOpacity
           style={[styles.iosListItem, isLastItem && styles.iosListItemLast]}
-          onPress={() => navigation.navigate("BookDetail", { book: item })}
+          onPress={() =>
+            navigation.navigate("BookDetail", { ma_sach: item.id })
+          }
         >
           <View
             style={[styles.bookCover, { backgroundColor: item.coverColor }]}
@@ -243,7 +249,9 @@ const SearchScreen = ({ navigation, route }: any) => {
       return (
         <TouchableOpacity
           style={styles.gridItem}
-          onPress={() => navigation.navigate("BookDetail", { book: item })}
+          onPress={() =>
+            navigation.navigate("BookDetail", { ma_sach: item.id })
+          }
         >
           <View
             style={[
@@ -396,9 +404,20 @@ const SearchScreen = ({ navigation, route }: any) => {
       {/* Navigation Bar */}
       <View style={styles.navigationBar}>
         <Text style={styles.navTitle}>Thư viện sách</Text>
-        <TouchableOpacity style={styles.navButton} onPress={toggleSearchInput}>
-          <Text style={styles.navButtonText}>🔍</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row" }}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("Cart")}
+          >
+            <Text style={styles.navButtonText}>🛒</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={toggleSearchInput}
+          >
+            <Text style={styles.navButtonText}>🔍</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Input - toggled */}

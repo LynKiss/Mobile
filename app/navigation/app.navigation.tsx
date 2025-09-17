@@ -18,6 +18,7 @@ import ManHinhPhat from "../screens/ManHinhPhat";
 import ManHinhThanhTich from "../screens/ManHinhThanhTich";
 import ManHinhSuKien from "../screens/ManHinhSuKien";
 import ManHinhDanhSachDoc from "../screens/ManHinhDanhSachDoc";
+import CartScreen from "../screens/CartScreen";
 import ToastNotification from "../components/ToastNotification";
 import { BookProvider } from "./BookContext";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -243,6 +244,7 @@ const AppNavigation = () => {
             name="ManHinhDanhSachDoc"
             component={ManHinhDanhSachDoc}
           />
+          <Stack.Screen name="Cart" component={CartScreen} />
         </Stack.Navigator>
       </AuthContext.Provider>
     </BookProvider>
