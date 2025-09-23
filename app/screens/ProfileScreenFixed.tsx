@@ -19,7 +19,7 @@ import {
   BO_TRON,
   HANG_SO,
   hamTienIch,
-} from "../styles/ProfileScreenWithNotification.styles";
+} from "../styles/ProfileScreen.styles";
 
 const { width, height } = Dimensions.get("window");
 
@@ -83,17 +83,6 @@ const ProfileScreen = ({ navigation }: any) => {
     Alert.alert(
       "Về ứng dụng",
       "📚 Thư viện số\n🔖 Phiên bản 1.0.0\n© 2024 Library Management System\n\nỨng dụng quản lý thư viện thông minh với:\n• Mượn trả sách online\n• Đặt chỗ trước\n• Thông báo nhắc nhở\n• Đánh giá sách"
-    );
-  };
-
-  const xuLyXemThongBao = () => {
-    Alert.alert(
-      "📬 Danh sách thông báo",
-      "🔔 Bạn có 3 thông báo mới:\n\n• 📚 Sách 'Lập trình React Native' sắp hết hạn (2 ngày)\n• ⭐ Đánh giá của bạn cho sách 'JavaScript cơ bản' đã được duyệt\n• 🎉 Chúc mừng! Bạn đã đạt cấp độ VIP\n\n💡 Nhấn vào thông báo để xem chi tiết",
-      [
-        { text: "Đã hiểu", style: "default" },
-        { text: "Xem tất cả", style: "default" },
-      ]
     );
   };
 
@@ -524,18 +513,7 @@ const ProfileScreen = ({ navigation }: any) => {
           {manHinhHienTai === "chinhSuaHoSo" && "Chỉnh sửa thông tin"}
           {manHinhHienTai === "caiDatThongBao" && "Cài đặt thông báo"}
         </Text>
-
-        {/* Nút thông báo ở góc phải */}
-        <TouchableOpacity style={styles.nutThongBao} onPress={xuLyXemThongBao}>
-          <Ionicons
-            name="notifications"
-            size={KIEU_CHU.trungBinhLon}
-            color={theme.colors.primary}
-          />
-          <View style={styles.dauChamThongBaoHeader} />
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={styles.nutQuayLai}
           onPress={() => setManHinhHienTai("trangCaNhan")}
         >
@@ -544,7 +522,7 @@ const ProfileScreen = ({ navigation }: any) => {
             size={KIEU_CHU.trungBinhLon}
             color={theme.colors.primary}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
 
       {renderManHinh()}

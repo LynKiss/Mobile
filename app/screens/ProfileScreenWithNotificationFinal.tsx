@@ -535,7 +535,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.dauChamThongBaoHeader} />
         </TouchableOpacity>
 
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={styles.nutQuayLai}
           onPress={() => setManHinhHienTai("trangCaNhan")}
         >
@@ -544,7 +544,7 @@ const ProfileScreen = ({ navigation }: any) => {
             size={KIEU_CHU.trungBinhLon}
             color={theme.colors.primary}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
 
       {renderManHinh()}
