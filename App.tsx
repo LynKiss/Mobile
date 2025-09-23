@@ -7,7 +7,8 @@ import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { OPENSAN_REGULAR } from "./untils/const";
 import "react-native-gesture-handler";
-import AppNavigation, { navigationRef } from "./app/navigation/app.navigation";
+import AppNavigation from "./app/navigation/app.navigation";
+import { navigationRef } from "./app/contexts/AuthContext";
 import { ThemeProvider } from "./app/contexts/ThemeContext";
 import { NotificationProvider } from "./app/contexts/NotificationContext";
 import AppWrapper from "./app/components/AppWrapper";
@@ -27,6 +28,11 @@ function App() {
 
   if (!loaded && !error) {
     return null;
+  }
+
+  // If font loading failed, continue without the custom font
+  if (error) {
+    console.warn("Font loading failed, using system fonts:", error);
   }
 
   return (

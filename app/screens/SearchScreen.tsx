@@ -14,7 +14,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBooks } from "../navigation/BookContext";
-import styles from "./SearchScreen.styles";
+import styles from "../styles/SearchScreen.styles";
 
 const getRandomCoverColor = () => {
   const colors = [
@@ -67,8 +67,13 @@ const SearchScreen = ({ navigation, route }: any) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
-  // New state for cart count
-  const { getCartTotalItems } = useBooks();
+  // New state for cart count and wishlist
+  const {
+    getCartTotalItems,
+    addToWishlist,
+    removeFromWishlist,
+    isBookInWishlist,
+  } = useBooks();
 
   const featuredOnly = route.params?.featuredOnly || false;
 
@@ -187,8 +192,34 @@ const SearchScreen = ({ navigation, route }: any) => {
     setCurrentSort(sortOptions[nextIndex].key);
   };
 
+  const handleWishlistToggle = async (book: any) => {
+    const isInWishlist = isBookInWishlist(book.id);
+    if (isInWishlist) {
+      const success = await removeFromWishlist(book);
+      if (success) {
+        Alert.alert(
+          "Thành công",
+          `Đã xóa "${book.title}" khỏi danh sách yêu thích`
+        );
+      } else {
+        Alert.alert("Lỗi", "Không thể xóa sách khỏi danh sách yêu thích");
+      }
+    } else {
+      const success = await addToWishlist(book);
+      if (success) {
+        Alert.alert(
+          "Thành công",
+          `Đã thêm "${book.title}" vào danh sách yêu thích`
+        );
+      } else {
+        Alert.alert("Lỗi", "Không thể thêm sách vào danh sách yêu thích");
+      }
+    }
+  };
+
   const renderBookItem = ({ item, index }: any) => {
     const isLastItem = index === filteredBooks.length - 1;
+    const isInWishlist = isBookInWishlist(item.id);
 
     if (currentView === "list") {
       return (
@@ -204,43 +235,75 @@ const SearchScreen = ({ navigation, route }: any) => {
             <Text style={{ fontSize: 24 }}>{item.icon}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.bookTitle} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <Text style={styles.bookAuthor}>{item.author}</Text>
             <View
               style={{
                 flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginTop: 4,
+                justifyContent: "space-between",
+                alignItems: "flex-start",
               }}
             >
-              <View
-                style={[
-                  styles.iosBadge,
-                  item.availableCopies > 0
-                    ? styles.iosBadgeSuccess
-                    : styles.iosBadgeWarning,
-                ]}
-              >
-                <Text
-                  style={{ fontSize: 10, fontWeight: "600", color: "#ffffff" }}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bookTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text style={styles.bookAuthor}>{item.author}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    marginTop: 4,
+                  }}
                 >
-                  {item.availableCopies > 0 ? "Có sẵn" : "Hết sách"}
+                  <View
+                    style={[
+                      styles.iosBadge,
+                      item.availableCopies > 0
+                        ? styles.iosBadgeSuccess
+                        : styles.iosBadgeWarning,
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: "600",
+                        color: "#ffffff",
+                      }}
+                    >
+                      {item.availableCopies > 0 ? "Có sẵn" : "Hết sách"}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                    ⭐ {item.rating}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                    {item.pages} trang
+                  </Text>
+                </View>
+                <Text
+                  style={{ fontSize: 12, color: "#3c3c4399", marginTop: 4 }}
+                >
+                  {item.availableCopies}/{item.totalCopies} cuốn •{" "}
+                  {item.publishYear}
                 </Text>
               </View>
-              <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
-                ⭐ {item.rating}
-              </Text>
-              <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
-                {item.pages} trang
-              </Text>
+              <TouchableOpacity
+                style={{
+                  padding: 8,
+                  marginLeft: 8,
+                }}
+                onPress={() => handleWishlistToggle(item)}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    color: isInWishlist ? "#ff2d92" : "#3c3c4399",
+                  }}
+                >
+                  {isInWishlist ? "❤️" : "🤍"}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={{ fontSize: 12, color: "#3c3c4399", marginTop: 4 }}>
-              {item.availableCopies}/{item.totalCopies} cuốn •{" "}
-              {item.publishYear}
-            </Text>
           </View>
           <Text style={{ color: "#3c3c4399", fontSize: 14 }}>›</Text>
         </TouchableOpacity>
@@ -262,45 +325,66 @@ const SearchScreen = ({ navigation, route }: any) => {
           >
             <Text style={{ fontSize: 32 }}>{item.icon}</Text>
           </View>
-          <Text
-            style={[styles.bookTitle, { fontSize: 14, marginTop: 12 }]}
-            numberOfLines={2}
-          >
-            {item.title}
-          </Text>
-          <Text style={[styles.bookAuthor, { fontSize: 12 }]}>
-            {item.author}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              marginTop: 8,
-            }}
-          >
-            <Text style={{ fontSize: 11, color: "#3c3c4399" }}>
-              ⭐ {item.rating}
-            </Text>
-            <View
-              style={[
-                styles.iosBadge,
-                item.availableCopies > 0
-                  ? styles.iosBadgeSuccess
-                  : styles.iosBadgeWarning,
-              ]}
-            >
+          <View style={{ flex: 1, justifyContent: "space-between" }}>
+            <View>
               <Text
-                style={{ fontSize: 9, fontWeight: "600", color: "#ffffff" }}
+                style={[styles.bookTitle, { fontSize: 14, marginTop: 12 }]}
+                numberOfLines={2}
               >
-                {item.availableCopies > 0 ? "Có sẵn" : "Hết"}
+                {item.title}
+              </Text>
+              <Text style={[styles.bookAuthor, { fontSize: 12 }]}>
+                {item.author}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                  marginTop: 8,
+                }}
+              >
+                <Text style={{ fontSize: 11, color: "#3c3c4399" }}>
+                  ⭐ {item.rating}
+                </Text>
+                <View
+                  style={[
+                    styles.iosBadge,
+                    item.availableCopies > 0
+                      ? styles.iosBadgeSuccess
+                      : styles.iosBadgeWarning,
+                  ]}
+                >
+                  <Text
+                    style={{ fontSize: 9, fontWeight: "600", color: "#ffffff" }}
+                  >
+                    {item.availableCopies > 0 ? "Có sẵn" : "Hết"}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 10, color: "#3c3c4399", marginTop: 8 }}>
+                {item.availableCopies}/{item.totalCopies} cuốn
               </Text>
             </View>
+            <TouchableOpacity
+              style={{
+                alignSelf: "flex-end",
+                padding: 4,
+                marginTop: 8,
+              }}
+              onPress={() => handleWishlistToggle(item)}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: isInWishlist ? "#ff2d92" : "#3c3c4399",
+                }}
+              >
+                {isInWishlist ? "❤️" : "🤍"}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Text style={{ fontSize: 10, color: "#3c3c4399", marginTop: 8 }}>
-            {item.availableCopies}/{item.totalCopies} cuốn
-          </Text>
         </TouchableOpacity>
       );
     }
@@ -322,7 +406,7 @@ const SearchScreen = ({ navigation, route }: any) => {
         showsHorizontalScrollIndicator={false}
         style={styles.filterTabs}
       >
-        {filters.map((filter) => (
+        {/* {filters.map((filter) => (
           <TouchableOpacity
             key={filter.key}
             style={[
@@ -340,7 +424,7 @@ const SearchScreen = ({ navigation, route }: any) => {
               {filter.label}
             </Text>
           </TouchableOpacity>
-        ))}
+        ))} */}
       </ScrollView>
     );
   };
@@ -388,19 +472,6 @@ const SearchScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={styles.container}>
-      {/* Status Bar */}
-      <View style={styles.statusBar}>
-        <Text style={styles.statusBarTime}>
-          {currentTime.getHours().toString().padStart(2, "0")}:
-          {currentTime.getMinutes().toString().padStart(2, "0")}
-        </Text>
-        <View style={styles.statusBarIcons}>
-          <Text>📶</Text>
-          <Text>📶</Text>
-          <Text>🔋</Text>
-        </View>
-      </View>
-
       {/* Navigation Bar */}
       <View style={styles.navigationBar}>
         <Text style={styles.navTitle}>Thư viện sách</Text>
@@ -410,6 +481,12 @@ const SearchScreen = ({ navigation, route }: any) => {
             onPress={() => navigation.navigate("Cart")}
           >
             <Text style={styles.navButtonText}>🛒</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => navigation.navigate("Wishlist")}
+          >
+            <Text style={styles.navButtonText}>❤️</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.navButton}

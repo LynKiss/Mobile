@@ -6,10 +6,13 @@ import {
   ScrollView,
   Alert,
   Image,
+  Dimensions,
 } from "react-native";
 import { useBooks } from "../navigation/BookContext";
-import styles from "./CartScreen.styles";
+import styles from "../styles/CartScreen.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const { height } = Dimensions.get("window");
 
 const CartScreen = ({ navigation }: any) => {
   const { cartItems, removeFromCart, updateCartItemQuantity, clearCart } =
@@ -51,7 +54,7 @@ const CartScreen = ({ navigation }: any) => {
       if (response.ok) {
         Alert.alert("Thành công", "Đã mượn sách thành công!");
         clearCart();
-        navigation.goBack();
+        navigation.goBack(); // Quay lại màn hình trước
       } else {
         const errText = await response.text();
         Alert.alert("Lỗi", `Không thể mượn sách: ${errText}`);
@@ -70,19 +73,23 @@ const CartScreen = ({ navigation }: any) => {
       return;
     }
 
-    if (
-      window.confirm(
-        `Bạn muốn mượn ${
-          cartItems.length
-        } cuốn sách với tổng ${cartItems.reduce(
-          (total, item) => total + item.quantity,
-          0
-        )} quyển?`
-      )
-    ) {
-      console.log("==> Đã ấn nút mượn");
-      doBorrowBooks(); // gọi hàm mượn sách thật sự
-    }
+    Alert.alert(
+      "Xác nhận mượn sách",
+      `Bạn muốn mượn ${cartItems.length} cuốn sách với tổng ${cartItems.reduce(
+        (total, item) => total + item.quantity,
+        0
+      )} quyển?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xác nhận",
+          onPress: () => {
+            console.log("==> Đã ấn nút mượn");
+            doBorrowBooks(); // gọi hàm mượn sách thật sự
+          },
+        },
+      ]
+    );
   };
 
   const handleQuantityChange = async (maSach: string, newQuantity: number) => {
@@ -98,11 +105,17 @@ const CartScreen = ({ navigation }: any) => {
   };
 
   const handleRemoveItem = async (cartItemId: string) => {
-    const confirmed = window.confirm("Bạn muốn xóa sách này khỏi giỏ hàng?");
-    if (confirmed) {
-      console.log("Removing cartItem:", cartItemId);
-      await removeFromCart(cartItemId);
-    }
+    Alert.alert("Xác nhận", "Bạn muốn xóa sách này khỏi giỏ hàng?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa",
+        style: "destructive",
+        onPress: async () => {
+          console.log("Removing cartItem:", cartItemId);
+          await removeFromCart(cartItemId);
+        },
+      },
+    ]);
   };
 
   const getTotalItems = () => {
@@ -115,18 +128,32 @@ const CartScreen = ({ navigation }: any) => {
 
   if (cartItems.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>🛒</Text>
-        <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
-        <Text style={styles.emptySubtitle}>
-          Hãy thêm sách vào giỏ để mượn nhiều cuốn cùng lúc
-        </Text>
-        <TouchableOpacity
-          style={styles.browseButton}
-          onPress={() => navigation.navigate("Search")}
-        >
-          <Text style={styles.browseButtonText}>Tìm sách</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Giỏ mượn</Text>
+          <View style={styles.headerRight} />
+        </View>
+
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🛒</Text>
+          <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
+          <Text style={styles.emptySubtitle}>
+            Hãy thêm sách vào giỏ để mượn nhiều cuốn cùng lúc
+          </Text>
+          <TouchableOpacity
+            style={styles.browseButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.browseButtonText}>Tìm sách</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -135,10 +162,14 @@ const CartScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Giỏ hàng</Text>
-        <Text style={styles.headerSubtitle}>
-          {getTotalBooks()} cuốn sách • {getTotalItems()} quyển
-        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Giỏ mượn</Text>
+        <View style={styles.headerRight} />
       </View>
 
       {/* Cart Items */}
@@ -173,42 +204,45 @@ const CartScreen = ({ navigation }: any) => {
               </View>
             </View>
 
-            <View style={styles.quantityControls}>
-              <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  item.quantity <= 1 && styles.disabledButton,
-                ]}
-                onPress={() =>
-                  handleQuantityChange(item.book.ma_sach, item.quantity - 1)
-                }
-                disabled={item.quantity <= 1}
-              >
-                <Text style={styles.quantityButtonText}>-</Text>
-              </TouchableOpacity>
+            <View style={styles.cartItemActions}>
+              <View style={styles.quantityControls}>
+                <TouchableOpacity
+                  style={[
+                    styles.quantityButton,
+                    item.quantity <= 1 && styles.disabledButton,
+                  ]}
+                  onPress={() =>
+                    handleQuantityChange(item.book.ma_sach, item.quantity - 1)
+                  }
+                  disabled={item.quantity <= 1}
+                >
+                  <Text style={styles.quantityButtonText}>-</Text>
+                </TouchableOpacity>
 
-              <Text style={styles.quantityText}>{item.quantity}</Text>
+                <Text style={styles.quantityText}>{item.quantity}</Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.quantityButton,
+                    item.quantity >= item.book.so_luong &&
+                      styles.disabledButton,
+                  ]}
+                  onPress={() =>
+                    handleQuantityChange(item.book.ma_sach, item.quantity + 1)
+                  }
+                  disabled={item.quantity >= item.book.so_luong}
+                >
+                  <Text style={styles.quantityButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  item.quantity >= item.book.so_luong && styles.disabledButton,
-                ]}
-                onPress={() =>
-                  handleQuantityChange(item.book.ma_sach, item.quantity + 1)
-                }
-                disabled={item.quantity >= item.book.so_luong}
+                style={styles.removeButton}
+                onPress={() => handleRemoveItem(item.id)}
               >
-                <Text style={styles.quantityButtonText}>+</Text>
+                <Text style={styles.removeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => handleRemoveItem(item.id)}
-            >
-              <Text style={styles.removeButtonText}>✕</Text>
-            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -231,13 +265,11 @@ const CartScreen = ({ navigation }: any) => {
             ]);
           }}
         >
-          <Text style={styles.clearButtonText}>Xóa tất cả</Text>
+          <Text style={styles.clearButtonText}>Xóa giỏ</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.borrowButton} onPress={handleBorrowAll}>
-          <Text style={styles.borrowButtonText}>
-            Mượn {getTotalItems()} quyển
-          </Text>
+          <Text style={styles.borrowButtonText}>Xác nhận</Text>
         </TouchableOpacity>
       </View>
     </View>

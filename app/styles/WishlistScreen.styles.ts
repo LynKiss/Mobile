@@ -89,4 +89,18 @@ export default StyleSheet.create({
     color: "#6b7280",
     marginBottom: 12,
   },
+  bookCoverImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+  },
 });

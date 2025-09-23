@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "../navigation/app.navigation";
+import { useAuth } from "../contexts/AuthContext";
 import GradientView from "../components/GradientView";
 import styles from "../styles/LoginScreen.styles";
 

@@ -9,7 +9,7 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../navigation/app.navigation";
+import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 
 const ProfileScreen = ({ navigation }: any) => {

@@ -1,40 +1,36 @@
-import React, { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
+import { useBooks } from "../navigation/BookContext";
 import styles from "../styles/WishlistScreen.styles";
 import GradientBox from "../components/GradientBox";
 import * as Animatable from "react-native-animatable";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const WishlistScreen = ({ navigation }: any) => {
   const { theme } = useTheme();
-  const [wishlistBooks, setWishlistBooks] = useState([
-    {
-      id: "1",
-      title: "Advanced React Patterns",
-      author: "Kent C. Dodds",
-      availability: "available",
-      gradient: ["#6366f1", "#4338ca"],
-      emoji: "🔮",
-    },
-    {
-      id: "2",
-      title: "Clean Code",
-      author: "Robert C. Martin",
-      availability: "unavailable",
-      gradient: ["#14b8a6", "#0f766e"],
-      emoji: "🌊",
-    },
-    {
-      id: "3",
-      title: "System Design Interview",
-      author: "Alex Xu",
-      availability: "limited",
-      gradient: ["#f59e0b", "#d97706"],
-      emoji: "⚡",
-    },
-  ]);
+  const { wishlistItems, removeFromWishlist, loadWishlist } = useBooks();
+  const [loading, setLoading] = useState(true);
 
-  const handleRemoveFromWishlist = (id: string, title: string) => {
+  useEffect(() => {
+    loadWishlistData();
+  }, []);
+
+  const loadWishlistData = async () => {
+    setLoading(true);
+    await loadWishlist();
+    setLoading(false);
+  };
+
+  const handleRemoveFromWishlist = async (bookId: string, title: string) => {
     Alert.alert(
       "Xác nhận xóa",
       `Bạn có muốn xóa "${title}" khỏi danh sách yêu thích không?`,
@@ -43,18 +39,63 @@ const WishlistScreen = ({ navigation }: any) => {
         {
           text: "Xóa",
           style: "destructive",
-          onPress: () => {
-            setWishlistBooks(wishlistBooks.filter((b) => b.id !== id));
+          onPress: async () => {
+            const success = await removeFromWishlist(bookId);
+            if (success) {
+              Alert.alert("Thành công", "Đã xóa khỏi danh sách yêu thích");
+            } else {
+              Alert.alert("Lỗi", "Không thể xóa sách khỏi danh sách yêu thích");
+            }
           },
         },
       ]
     );
   };
 
+  const getAvailabilityStatus = (book: any) => {
+    if (book.so_luong > 5) return "available";
+    if (book.so_luong === 0) return "unavailable";
+    return "limited";
+  };
+
+  const getAvailabilityText = (book: any) => {
+    if (book.so_luong > 5) return "✅ Có sẵn";
+    if (book.so_luong === 0) return "❌ Đã hết";
+    return `⏳ Còn ${book.so_luong} cuốn`;
+  };
+
+  const getAvailabilityStyle = (book: any) => {
+    const status = getAvailabilityStatus(book);
+    switch (status) {
+      case "available":
+        return styles.availableText;
+      case "unavailable":
+        return styles.unavailableText;
+      case "limited":
+        return styles.limitedText;
+      default:
+        return styles.availableText;
+    }
+  };
+
+  const getRandomGradient = (): [string, string] => {
+    const gradients: [string, string][] = [
+      ["#6366f1", "#4338ca"],
+      ["#14b8a6", "#0f766e"],
+      ["#f59e0b", "#d97706"],
+      ["#ef4444", "#dc2626"],
+      ["#8b5cf6", "#7c3aed"],
+      ["#06b6d4", "#0891b2"],
+    ];
+    return gradients[Math.floor(Math.random() * gradients.length)];
+  };
+
   const renderBook = ({ item, index }: any) => {
-    const isAvailable = item.availability === "available";
-    const isUnavailable = item.availability === "unavailable";
-    const isLimited = item.availability === "limited";
+    const book = item.book;
+    const availability = getAvailabilityStatus(book);
+    const isAvailable = availability === "available";
+    const isUnavailable = availability === "unavailable";
+    const isLimited = availability === "limited";
 
     return (
       <Animatable.View
@@ -65,20 +106,28 @@ const WishlistScreen = ({ navigation }: any) => {
       >
         <View style={styles.bookCard}>
           {/* Bìa sách */}
-          <GradientBox colors={item.gradient} style={styles.bookCover}>
-            <Text style={styles.bookEmoji}>{item.emoji}</Text>
+          <GradientBox colors={getRandomGradient()} style={styles.bookCover}>
+            {book.hinh_bia ? (
+              <Image
+                source={{ uri: book.hinh_bia }}
+                style={styles.bookCoverImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.bookEmoji}>📚</Text>
+            )}
           </GradientBox>
 
           {/* Thông tin */}
           <View style={styles.bookInfo}>
-            <Text style={styles.bookTitle}>{item.title}</Text>
-            <Text style={styles.bookAuthor}>Tác giả: {item.author}</Text>
+            <Text style={styles.bookTitle} numberOfLines={2}>
+              {book.tieu_de}
+            </Text>
+            <Text style={styles.bookAuthor}>Tác giả: {book.tac_gia}</Text>
 
-            {isAvailable && <Text style={styles.availableText}>✅ Có sẵn</Text>}
-            {isUnavailable && (
-              <Text style={styles.unavailableText}>❌ Đã hết</Text>
-            )}
-            {isLimited && <Text style={styles.limitedText}>⏳ Còn 1 cuốn</Text>}
+            <Text style={getAvailabilityStyle(book)}>
+              {getAvailabilityText(book)}
+            </Text>
 
             {/* Buttons */}
             <View style={styles.actionRow}>
@@ -86,7 +135,7 @@ const WishlistScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[styles.button, styles.borrowBtn]}
-                  onPress={() => navigation.navigate("Borrow")}
+                  onPress={() => navigation.navigate("Borrow", { book })}
                 >
                   <Text style={styles.borrowBtnText}>Mượn ngay</Text>
                 </TouchableOpacity>
@@ -103,7 +152,7 @@ const WishlistScreen = ({ navigation }: any) => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[styles.button, styles.borrowBtn]}
-                  onPress={() => navigation.navigate("Borrow")}
+                  onPress={() => navigation.navigate("Borrow", { book })}
                 >
                   <Text style={styles.borrowBtnText}>Mượn ngay</Text>
                 </TouchableOpacity>
@@ -112,7 +161,9 @@ const WishlistScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 style={[styles.button, styles.removeBtn]}
-                onPress={() => handleRemoveFromWishlist(item.id, item.title)}
+                onPress={() =>
+                  handleRemoveFromWishlist(item.ma_sach, book.tieu_de)
+                }
               >
                 <Text style={styles.removeBtnText}>🗑️</Text>
               </TouchableOpacity>
@@ -123,17 +174,32 @@ const WishlistScreen = ({ navigation }: any) => {
     );
   };
 
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          styles.loadingContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Đang tải danh sách yêu thích...</Text>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.header}>
         <Text style={styles.title}>❤️ Danh sách yêu thích</Text>
-        <Text style={styles.countText}>{wishlistBooks.length} cuốn</Text>
+        <Text style={styles.countText}>{wishlistItems.length} cuốn</Text>
       </View>
 
       <FlatList
-        data={wishlistBooks}
+        data={wishlistItems}
         keyExtractor={(item) => item.id}
         renderItem={renderBook}
         showsVerticalScrollIndicator={false}

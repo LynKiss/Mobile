@@ -29,6 +29,20 @@ export default StyleSheet.create({
     marginBottom: 14,
     color: "#111827",
   },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 14,
+  },
+  toggleIcon: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#6b7280",
+    paddingHorizontal: 8,
+  },
 
   // Book card
   bookCard: {
@@ -46,6 +60,11 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: "#fdba74",
   },
+  overdueCard: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 2,
+    borderColor: "#ef4444",
+  },
   bookHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -53,6 +72,12 @@ export default StyleSheet.create({
   },
   bookTitle: { fontWeight: "700", fontSize: 16, color: "#111827" },
   bookMeta: { color: "#6b7280", marginTop: 4, fontSize: 13 },
+  bookNote: {
+    color: "#9ca3af",
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: "italic",
+  },
 
   // Badge
   badgeDanger: {
@@ -75,6 +100,26 @@ export default StyleSheet.create({
     overflow: "hidden",
     fontWeight: "600",
   },
+  badgeSecondary: {
+    fontSize: 12,
+    backgroundColor: "#e5e7eb",
+    color: "#374151",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: "hidden",
+    fontWeight: "600",
+  },
+  badgeOverdue: {
+    fontSize: 12,
+    backgroundColor: "#fecaca",
+    color: "#dc2626",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: "hidden",
+    fontWeight: "600",
+  },
 
   // Actions
   actionRow: { flexDirection: "row", marginTop: 12 },
@@ -91,5 +136,71 @@ export default StyleSheet.create({
   },
   renewBtn: { backgroundColor: "#3b82f6" },
   returnBtn: { backgroundColor: "#22c55e" },
+  urgentBtn: { backgroundColor: "#ef4444" },
   actionText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+
+  // Loading state
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+
+  // Empty state
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#9ca3af",
+    textAlign: "center",
+  },
+
+  // Pagination
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 16,
+    paddingHorizontal: 16,
+  },
+  paginationBtn: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: "center",
+  },
+  paginationBtnDisabled: {
+    backgroundColor: "#d1d5db",
+  },
+  paginationText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  paginationTextDisabled: {
+    color: "#9ca3af",
+  },
+  paginationInfo: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    minWidth: 60,
+    textAlign: "center",
+  },
 });

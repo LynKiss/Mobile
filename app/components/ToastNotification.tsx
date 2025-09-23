@@ -100,14 +100,14 @@ const styles = StyleSheet.create({
     right: 20,
     borderRadius: 8,
     padding: 16,
+    elevation: 8,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     zIndex: 1000,
   },
   content: {

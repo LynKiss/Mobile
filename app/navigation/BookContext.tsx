@@ -9,7 +9,7 @@ export interface Book {
   ma_the_loai?: string;
   ma_nxb?: string;
   nam_xuat_ban?: string;
-  hinh_bia?: string;
+  hinh_bia?: string | null;
   mo_ta?: string;
   so_luong: number;
   ISBN?: string;
@@ -35,10 +35,19 @@ export interface BorrowInfo {
   notes: string;
 }
 
+// Interface cho sách yêu thích
+export interface WishlistItem {
+  id: string;
+  ma_sach: string;
+  book: Book;
+  addedDate: string;
+}
+
 // Interface cho BookContext
 interface BookContextType {
   cartItems: CartItem[];
   borrowInfo: BorrowInfo;
+  wishlistItems: WishlistItem[];
   addToCart: (book: Book, quantity?: number) => Promise<boolean>;
   removeFromCart: (cartItemId: string) => Promise<boolean>;
   updateCartItemQuantity: (
@@ -50,11 +59,18 @@ interface BookContextType {
   getCartItem: (bookId: string) => CartItem | null;
   getCartTotalItems: () => number;
   updateBorrowInfo: (borrowInfo: Partial<BorrowInfo>) => Promise<boolean>;
+  // Wishlist functions
+  addToWishlist: (book: Book) => Promise<boolean>;
+  removeFromWishlist: (bookId: string) => Promise<boolean>;
+  isBookInWishlist: (bookId: string) => boolean;
+  getWishlistItems: () => Promise<WishlistItem[]>;
+  loadWishlist: () => Promise<void>;
 }
 
 const BookContext = createContext<BookContextType>({
   cartItems: [],
   borrowInfo: { expectedBorrowDate: "", notes: "" },
+  wishlistItems: [],
   addToCart: async () => false,
   removeFromCart: async () => false,
   updateCartItemQuantity: async () => false,
@@ -63,6 +79,11 @@ const BookContext = createContext<BookContextType>({
   getCartItem: () => null,
   getCartTotalItems: () => 0,
   updateBorrowInfo: async () => false,
+  addToWishlist: async () => false,
+  removeFromWishlist: async () => false,
+  isBookInWishlist: () => false,
+  getWishlistItems: async () => [],
+  loadWishlist: async () => {},
 });
 
 export const useBooks = () => useContext(BookContext);
@@ -75,9 +96,11 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
     expectedBorrowDate: "",
     notes: "",
   });
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
 
   useEffect(() => {
     loadCart();
+    loadWishlist();
   }, []);
 
   const loadCart = async () => {
@@ -88,6 +111,81 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (e) {
       console.error("Error loading cart:", e);
+    }
+  };
+
+  const loadWishlist = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return;
+
+      const response = await fetch("http://localhost:3000/api/sach_yeu_thich", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const wishlistData = await response.json();
+        console.log("Wishlist API response:", wishlistData);
+
+        // Handle different data structures from the API
+        let formattedWishlist: WishlistItem[] = [];
+
+        if (Array.isArray(wishlistData) && wishlistData.length > 0) {
+          // If it's an array of books directly
+          if (wishlistData[0].ma_sach && wishlistData[0].tieu_de) {
+            formattedWishlist = wishlistData.map(
+              (book: any, index: number) => ({
+                id: book.id ? book.id.toString() : (index + 1).toString(),
+                ma_sach: book.ma_sach.toString(),
+                book: {
+                  ma_sach: book.ma_sach.toString(),
+                  tieu_de: book.tieu_de || "",
+                  tac_gia: book.tac_gia || "",
+                  ma_the_loai: book.ma_the_loai,
+                  ma_nxb: book.ma_nxb,
+                  nam_xuat_ban: book.nam_xuat_ban,
+                  hinh_bia: book.hinh_bia
+                    ? `http://localhost:3000/uploads/${book.hinh_bia}`
+                    : null,
+                  mo_ta: book.mo_ta,
+                  so_luong: book.so_luong || 0,
+                  ISBN: book.ISBN,
+                  gia_tri: book.gia_tri,
+                  ma_khu_vuc: book.ma_khu_vuc,
+                  ma_ngon_ngu: book.ma_ngon_ngu,
+                  so_trang: book.so_trang,
+                  tags: book.tags,
+                },
+                addedDate: book.ngay_them || new Date().toISOString(),
+              })
+            );
+          }
+          // If it's the expected structure with id, ma_sach, sach, created_at
+          else if (wishlistData[0].id && wishlistData[0].sach) {
+            formattedWishlist = wishlistData
+              .filter(
+                (item: any) => item && item.id && item.ma_sach && item.sach
+              )
+              .map((item: any) => ({
+                id: item.id.toString(),
+                ma_sach: item.ma_sach,
+                book: item.sach,
+                addedDate: item.created_at || new Date().toISOString(),
+              }));
+          }
+        }
+
+        console.log("Formatted wishlist:", formattedWishlist);
+        setWishlistItems(formattedWishlist);
+      } else {
+        console.error("Failed to fetch wishlist:", response.status);
+      }
+    } catch (e) {
+      console.error("Error loading wishlist:", e);
     }
   };
 
@@ -198,11 +296,79 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // ✅ Thêm vào wishlist
+  const addToWishlist = async (book: Book): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return false;
+
+      const response = await fetch("http://localhost:3000/api/sach-yeu-thich", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ma_sach: book.ma_sach,
+        }),
+      });
+
+      if (response.ok) {
+        await loadWishlist(); // Reload wishlist to get updated data
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Error addToWishlist:", e);
+      return false;
+    }
+  };
+
+  // ✅ Xóa khỏi wishlist
+  const removeFromWishlist = async (bookId: string): Promise<boolean> => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return false;
+
+      const response = await fetch(
+        `http://localhost:3000/api/sach-yeu-thich/${bookId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        await loadWishlist(); // Reload wishlist to get updated data
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Error removeFromWishlist:", e);
+      return false;
+    }
+  };
+
+  // Kiểm tra sách có trong wishlist không
+  const isBookInWishlist = (bookId: string): boolean => {
+    return wishlistItems.some((item) => item.ma_sach === bookId);
+  };
+
+  // Lấy danh sách wishlist
+  const getWishlistItems = async (): Promise<WishlistItem[]> => {
+    await loadWishlist();
+    return wishlistItems;
+  };
+
   return (
     <BookContext.Provider
       value={{
         cartItems,
         borrowInfo,
+        wishlistItems,
         addToCart,
         removeFromCart,
         updateCartItemQuantity,
@@ -211,6 +377,11 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
         getCartItem,
         getCartTotalItems,
         updateBorrowInfo,
+        addToWishlist,
+        removeFromWishlist,
+        isBookInWishlist,
+        getWishlistItems,
+        loadWishlist,
       }}
     >
       {children}

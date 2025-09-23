@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { useAuth } from "../navigation/app.navigation";
+import { useAuth } from "../contexts/AuthContext";
 
 const RegisterScreen = ({ navigation }: any) => {
   const { register } = useAuth();
