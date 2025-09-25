@@ -19,7 +19,7 @@ import {
   BO_TRON,
   HANG_SO,
   hamTienIch,
-} from "../styles/ProfileScreenWithNotification.styles";
+} from "../styles/ProfileScreen.styles";
 
 const { width, height } = Dimensions.get("window");
 

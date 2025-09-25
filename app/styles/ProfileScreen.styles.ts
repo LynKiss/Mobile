@@ -484,6 +484,22 @@ export const styles = StyleSheet.create({
     fontSize: KIEU_CHU.trungBinh,
     fontWeight: "bold",
   },
+
+  // ===== NÚT THÔNG BÁO =====
+  nutThongBao: {
+    position: "relative",
+    padding: KHOANG_CACH.nho,
+  },
+
+  dauChamThongBaoHeader: {
+    position: "absolute",
+    top: KHOANG_CACH.nho,
+    right: KHOANG_CACH.nho,
+    width: KHOANG_CACH.nho,
+    height: KHOANG_CACH.nho,
+    borderRadius: KHOANG_CACH.nho / 2,
+    backgroundColor: MAU_SAC.do,
+  },
 });
 
 // ===== CONSTANTS CHUNG =====

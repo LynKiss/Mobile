@@ -1,11 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
-
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { View } from "react-native";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { OPENSAN_REGULAR } from "./untils/const";
 import "react-native-gesture-handler";
 import AppNavigation from "./app/navigation/app.navigation";
 import { navigationRef } from "./app/contexts/AuthContext";
@@ -13,26 +8,16 @@ import { ThemeProvider } from "./app/contexts/ThemeContext";
 import { NotificationProvider } from "./app/contexts/NotificationContext";
 import AppWrapper from "./app/components/AppWrapper";
 
-SplashScreen.preventAutoHideAsync();
-
 function App() {
-  const [loaded, error] = useFonts({
-    [OPENSAN_REGULAR]: require("./assets/fonts/OpenSans-Regular.ttf"),
-  });
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
+    // Simple app initialization without font loading
+    setAppReady(true);
+  }, []);
 
-  if (!loaded && !error) {
+  if (!appReady) {
     return null;
-  }
-
-  // If font loading failed, continue without the custom font
-  if (error) {
-    console.warn("Font loading failed, using system fonts:", error);
   }
 
   return (
