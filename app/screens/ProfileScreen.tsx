@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   Alert,
   Switch,
   Dimensions,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -33,7 +35,7 @@ const ProfileScreen = ({ navigation }: any) => {
   const [thongBaoEmail, setThongBaoEmail] = useState(true);
 
   // ===== DỮ LIỆU MẪU =====
-  const thongTinNguoiDung = {
+  const [thongTinNguoiDung, setThongTinNguoiDung] = useState({
     hoTen: "Nguyễn Văn A",
     email: "nguyenvana@email.com",
     maSinhVien: "SV2024001",
@@ -44,7 +46,47 @@ const ProfileScreen = ({ navigation }: any) => {
     diemDanhGia: 4.9,
     chuoiLienTuc: 15,
     hangNguoiDung: "Vàng",
-  };
+    avatar: null as string | null,
+  });
+
+  // ===== FETCH PROFILE DATA =====
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return;
+
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/nguoi_dung/profile/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setThongTinNguoiDung({
+            hoTen: data.ho_ten,
+            email: data.email,
+            maSinhVien: data.ma_nguoi_dung.toString(),
+            ngayThamGia: "15/08/2024", // Keep default or calculate
+            soSachDaMuon: data.total_borrowed,
+            soSachDangMuon: data.currently_borrowed,
+            hangThanhVien: data.is_vip ? "VIP" : "Thường",
+            diemDanhGia: parseFloat(data.avg_rating),
+            chuoiLienTuc: data.streak_days,
+            hangNguoiDung: data.rank_name,
+            avatar: data.avatar,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // ===== XỬ LÝ SỰ KIỆN =====
   const xuLyDangXuat = async () => {
@@ -186,9 +228,16 @@ const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.thongTinNguoiDung}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.chuCaiAvatar}>
-                {thongTinNguoiDung.hoTen.charAt(0)}
-              </Text>
+              {thongTinNguoiDung.avatar ? (
+                <Image
+                  source={{ uri: thongTinNguoiDung.avatar }}
+                  style={{ width: 64, height: 64, borderRadius: 32 }}
+                />
+              ) : (
+                <Text style={styles.chuCaiAvatar}>
+                  {thongTinNguoiDung.hoTen.charAt(0)}
+                </Text>
+              )}
             </View>
             <View style={styles.trangThaiOnline} />
           </View>
@@ -259,9 +308,7 @@ const ProfileScreen = ({ navigation }: any) => {
             tieuDe="Chỉnh sửa thông tin"
             icon="person-outline"
             mauSac={MAU_SAC.xanhDuong}
-            onPress={() =>
-              Alert.alert("Thông báo", "Tính năng đang phát triển")
-            }
+            onPress={() => navigation.navigate("EditProfile")}
           />
 
           <NutChucNang

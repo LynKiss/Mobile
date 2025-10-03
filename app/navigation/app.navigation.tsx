@@ -14,6 +14,7 @@ import ManHinhThanhTich from "../screens/ManHinhThanhTich";
 import ManHinhSuKien from "../screens/ManHinhSuKien";
 import ManHinhDanhSachDoc from "../screens/ManHinhDanhSachDoc";
 import CartScreen from "../screens/CartScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
 import ToastNotification from "../components/ToastNotification";
 import { BookProvider } from "./BookContext";
 import { AuthProvider, navigationRef, useAuth } from "../contexts/AuthContext";
@@ -62,6 +63,7 @@ const AppNavigationContent = () => {
           component={ManHinhDanhSachDoc}
         />
         <Stack.Screen name="Cart" component={CartScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       </Stack.Navigator>
     </BookProvider>
   );
