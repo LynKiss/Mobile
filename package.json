@@ -1,8 +1,7 @@
 {
   "name": "learn-react-native-hoidanit",
   "author": {
-    "name": "Lyn_Mobile",
-    "url": "https://hoidanit.vn"
+    "name": "Lyn_Mobile"
   },
   "version": "1.0.0",
   "main": "expo/AppEntry.js",

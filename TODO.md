@@ -1,13 +1,23 @@
-TODO: Cải thiện WishlistScreen
+# Redesign Library App UI - Consistent, Beautiful, World-Class Design
 
-## Đã hoàn thành:
+## Plan Overview
+- Update theme with library-specific colors and gradients
+- Create reusable components for consistency
+- Redesign all screens with modern, clean design
+- Replace emojis with Ionicons
+- Ensure full functionality and responsiveness
+- Support dark/light theme
 
-- [x] Phân tích mã nguồn WishlistScreen và styles
-
-## Các bước cần làm:
-
-- [x] Kiểm tra và cài đặt react-native-vector-icons nếu chưa có (đã có @expo/vector-icons)
-- [x] Cập nhật theme.ts với màu sắc và gradients hiện đại
-- [x] Cập nhật WishlistScreen.styles.ts: card lớn hơn, shadows tốt hơn, gradients, spacing
-- [x] Cập nhật WishlistScreen.tsx: sử dụng vector icons, thêm animations như bounce, scale on press
-- [x] Test các thay đổi trên simulator
+## Steps
+- [ ] Update app/styles/theme.ts with library colors
+- [ ] Create reusable components in app/components/
+  - [ ] Card.tsx
+  - [ ] Button.tsx
+  - [ ] Header.tsx
+  - [ ] IconText.tsx
+- [ ] Update HomeScreen.tsx and HomeScreen.styles.ts
+- [ ] Update ProfileScreen.tsx and ProfileScreen.styles.ts
+- [ ] Update BookDetailScreen.tsx and BookDetailScreen.styles.ts
+- [ ] Update other screens (LoginScreen, SearchScreen, etc.)
+- [ ] Test on device/emulator
+- [ ] Ensure API integrations work

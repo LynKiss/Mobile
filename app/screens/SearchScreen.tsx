@@ -228,6 +228,7 @@ const SearchScreen = ({ navigation, route }: any) => {
           onPress={() =>
             navigation.navigate("BookDetail", { ma_sach: item.id })
           }
+          // TODO: Add smooth transition animation (slide or fade)
         >
           <View
             style={[styles.bookCover, { backgroundColor: item.coverColor }]}
@@ -256,17 +257,17 @@ const SearchScreen = ({ navigation, route }: any) => {
                   }}
                 >
                   <View
-                    style={[
+                    style={[ 
                       styles.iosBadge,
                       item.availableCopies > 0
                         ? styles.iosBadgeSuccess
-                        : styles.iosBadgeWarning,
+                        : { ...styles.iosBadgeWarning, backgroundColor: "#FF5252" },
                     ]}
                   >
                     <Text
                       style={{
                         fontSize: 10,
-                        fontWeight: "600",
+                        fontWeight: "700",
                         color: "#ffffff",
                       }}
                     >
@@ -298,9 +299,10 @@ const SearchScreen = ({ navigation, route }: any) => {
                   style={{
                     fontSize: 20,
                     color: isInWishlist ? "#ff2d92" : "#3c3c4399",
+                    // Add animation styles here if desired
                   }}
                 >
-                  {isInWishlist ? "❤️" : "🤍"}
+                  {isInWishlist ? "💖" : "🤍"}
                 </Text>
               </TouchableOpacity>
             </View>

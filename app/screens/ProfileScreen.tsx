@@ -315,9 +315,7 @@ const ProfileScreen = ({ navigation }: any) => {
             tieuDe="Đổi mật khẩu"
             icon="lock-closed-outline"
             mauSac={MAU_SAC.xanhLa}
-            onPress={() =>
-              Alert.alert("Thông báo", "Tính năng đang phát triển")
-            }
+            onPress={() => navigation.navigate("ChangePassword")}
           />
 
           <NutChucNang
@@ -334,18 +332,14 @@ const ProfileScreen = ({ navigation }: any) => {
             tieuDe="Lịch sử mượn sách"
             icon="time-outline"
             mauSac={MAU_SAC.tim}
-            onPress={() =>
-              Alert.alert("Thông báo", "Tính năng đang phát triển")
-            }
+            onPress={() => navigation.navigate("BorrowingHistory")}
           />
 
           <NutChucNang
             tieuDe="Trợ giúp & Hỗ trợ"
             icon="help-circle-outline"
             mauSac={MAU_SAC.xanhNhat}
-            onPress={() =>
-              Alert.alert("Thông báo", "Tính năng đang phát triển")
-            }
+            onPress={() => navigation.navigate("HelpScreen")}
           />
 
           <NutChucNang
