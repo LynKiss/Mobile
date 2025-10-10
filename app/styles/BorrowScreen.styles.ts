@@ -1,11 +1,11 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#f9fafb" },
+  container: { flex: 1, padding: 16, backgroundColor: "transparent" },
 
   // Tổng quan
   overviewCard: {
-    backgroundColor: "#e0f2fe",
+    backgroundColor: "#f0ece5",
     padding: 18,
     borderRadius: 16,
     marginBottom: 24,
@@ -13,29 +13,33 @@ export default StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
   },
   overviewTitle: {
     fontWeight: "700",
-    color: "#075985",
+    color: "#2b3a4a",
     fontSize: 16,
     marginBottom: 6,
   },
-  overviewText: { color: "#0369a1", fontSize: 14 },
+  overviewText: { color: "#3b4c5e", fontSize: 14 },
 
   // Section
   sectionTitle: {
     fontWeight: "700",
     fontSize: 18,
     marginBottom: 14,
-    color: "#111827",
+    color: "#202124",
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 4,
-    marginBottom: 14,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
   },
   toggleIcon: {
     fontSize: 16,
@@ -46,7 +50,7 @@ export default StyleSheet.create({
 
   // Book card
   bookCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f4ee",
     borderRadius: 16,
     padding: 16,
     marginBottom: 18,
@@ -54,26 +58,28 @@ export default StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
   },
   dueSoonCard: {
-    backgroundColor: "#fff7ed",
+    backgroundColor: "#f7f4ee",
     borderWidth: 1,
-    borderColor: "#fdba74",
+    borderColor: "#d0d0d0",
   },
   overdueCard: {
-    backgroundColor: "#fef2f2",
-    borderWidth: 2,
-    borderColor: "#ef4444",
+    backgroundColor: "#FDECEC", // light red tint
+    borderWidth: 1,
+    borderColor: "#F5BDBB", // soft red border
   },
   bookHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
   },
-  bookTitle: { fontWeight: "700", fontSize: 16, color: "#111827" },
-  bookMeta: { color: "#6b7280", marginTop: 4, fontSize: 13 },
+  bookTitle: { fontWeight: "700", fontSize: 16, color: "#202124" },
+  bookMeta: { color: "#4b5563", marginTop: 4, fontSize: 13 },
   bookNote: {
-    color: "#9ca3af",
+    color: "#777e88",
     fontSize: 12,
     marginTop: 4,
     fontStyle: "italic",
@@ -82,8 +88,10 @@ export default StyleSheet.create({
   // Badge
   badgeDanger: {
     fontSize: 12,
-    backgroundColor: "#fed7aa",
-    color: "#9a3412",
+    backgroundColor: "#ffffff",
+    color: "#1f1f1f",
+    borderWidth: 1,
+    borderColor: "#bdbdbd",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
@@ -92,8 +100,10 @@ export default StyleSheet.create({
   },
   badgeSuccess: {
     fontSize: 12,
-    backgroundColor: "#bbf7d0",
-    color: "#166534",
+    backgroundColor: "#ffffff",
+    color: "#1f1f1f",
+    borderWidth: 1,
+    borderColor: "#cfcfcf",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
@@ -102,8 +112,10 @@ export default StyleSheet.create({
   },
   badgeSecondary: {
     fontSize: 12,
-    backgroundColor: "#e5e7eb",
-    color: "#374151",
+    backgroundColor: "#ffffff",
+    color: "#1f1f1f",
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
@@ -112,8 +124,8 @@ export default StyleSheet.create({
   },
   badgeOverdue: {
     fontSize: 12,
-    backgroundColor: "#fecaca",
-    color: "#dc2626",
+    backgroundColor: "#FDE1E0", // lighter red badge bg
+    color: "#B54D4A", // muted red text
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
@@ -134,9 +146,9 @@ export default StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  renewBtn: { backgroundColor: "#3b82f6" },
-  returnBtn: { backgroundColor: "#22c55e" },
-  urgentBtn: { backgroundColor: "#ef4444" },
+  renewBtn: { backgroundColor: "#222222" },
+  returnBtn: { backgroundColor: "#444444" },
+  urgentBtn: { backgroundColor: "#000000" },
   actionText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
   // Loading state
@@ -147,7 +159,7 @@ export default StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6b7280",
+    color: "#4b5563",
     textAlign: "center",
   },
 
@@ -160,12 +172,12 @@ export default StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#374151",
+    color: "#202124",
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#9ca3af",
+    color: "#777e88",
     textAlign: "center",
   },
 
@@ -178,7 +190,7 @@ export default StyleSheet.create({
     paddingHorizontal: 16,
   },
   paginationBtn: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#3b4c5e",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -199,7 +211,7 @@ export default StyleSheet.create({
   paginationInfo: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: "#3b4c5e",
     minWidth: 60,
     textAlign: "center",
   },

@@ -12,6 +12,8 @@ import {
   Modal,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
+import { ThemedView } from "../components/Themed";
+import Badge from "../components/Badge";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useBooks } from "../navigation/BookContext";
 import styles from "../styles/SearchScreen.styles";
@@ -256,28 +258,19 @@ const SearchScreen = ({ navigation, route }: any) => {
                     marginTop: 4,
                   }}
                 >
-                  <View
-                    style={[ 
-                      styles.iosBadge,
-                      item.availableCopies > 0
-                        ? styles.iosBadgeSuccess
-                        : { ...styles.iosBadgeWarning, backgroundColor: "#FF5252" },
-                    ]}
+                  <Badge
+                    variant={item.availableCopies > 0 ? "subtle" : "default"}
                   >
-                    <Text
-                      style={{
-                        fontSize: 10,
-                        fontWeight: "700",
-                        color: "#ffffff",
-                      }}
-                    >
-                      {item.availableCopies > 0 ? "Có sẵn" : "Hết sách"}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                    {item.availableCopies > 0 ? "Có sẵn" : "Hết sách"}
+                  </Badge>
+                  <Text
+                    style={{ fontSize: 12, color: theme.colors.textSecondary }}
+                  >
                     ⭐ {item.rating}
                   </Text>
-                  <Text style={{ fontSize: 12, color: "#3c3c4399" }}>
+                  <Text
+                    style={{ fontSize: 12, color: theme.colors.textSecondary }}
+                  >
                     {item.pages} trang
                   </Text>
                 </View>
@@ -298,8 +291,9 @@ const SearchScreen = ({ navigation, route }: any) => {
                 <Text
                   style={{
                     fontSize: 20,
-                    color: isInWishlist ? "#ff2d92" : "#3c3c4399",
-                    // Add animation styles here if desired
+                    color: isInWishlist
+                      ? theme.colors.primary
+                      : theme.colors.textSecondary,
                   }}
                 >
                   {isInWishlist ? "💖" : "🤍"}
@@ -307,7 +301,9 @@ const SearchScreen = ({ navigation, route }: any) => {
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={{ color: "#3c3c4399", fontSize: 14 }}>›</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>
+            ›
+          </Text>
         </TouchableOpacity>
       );
     } else {
@@ -322,7 +318,7 @@ const SearchScreen = ({ navigation, route }: any) => {
             style={[
               styles.bookCover,
               styles.bookCoverLarge,
-              { backgroundColor: item.coverColor },
+              { backgroundColor: theme.colors.surface },
             ]}
           >
             <Text style={{ fontSize: 32 }}>{item.icon}</Text>
@@ -347,25 +343,24 @@ const SearchScreen = ({ navigation, route }: any) => {
                   marginTop: 8,
                 }}
               >
-                <Text style={{ fontSize: 11, color: "#3c3c4399" }}>
+                <Text
+                  style={{ fontSize: 11, color: theme.colors.textSecondary }}
+                >
                   ⭐ {item.rating}
                 </Text>
-                <View
-                  style={[
-                    styles.iosBadge,
-                    item.availableCopies > 0
-                      ? styles.iosBadgeSuccess
-                      : styles.iosBadgeWarning,
-                  ]}
+                <Badge
+                  variant={item.availableCopies > 0 ? "subtle" : "default"}
                 >
-                  <Text
-                    style={{ fontSize: 9, fontWeight: "600", color: "#ffffff" }}
-                  >
-                    {item.availableCopies > 0 ? "Có sẵn" : "Hết"}
-                  </Text>
-                </View>
+                  {item.availableCopies > 0 ? "Có sẵn" : "Hết"}
+                </Badge>
               </View>
-              <Text style={{ fontSize: 10, color: "#3c3c4399", marginTop: 8 }}>
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: theme.colors.textSecondary,
+                  marginTop: 8,
+                }}
+              >
                 {item.availableCopies}/{item.totalCopies} cuốn
               </Text>
             </View>
@@ -380,7 +375,9 @@ const SearchScreen = ({ navigation, route }: any) => {
               <Text
                 style={{
                   fontSize: 16,
-                  color: isInWishlist ? "#ff2d92" : "#3c3c4399",
+                  color: isInWishlist
+                    ? theme.colors.primary
+                    : theme.colors.textSecondary,
                 }}
               >
                 {isInWishlist ? "❤️" : "🤍"}
@@ -473,7 +470,7 @@ const SearchScreen = ({ navigation, route }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       {/* Navigation Bar */}
       <View style={styles.navigationBar}>
         <Text style={styles.navTitle}>Thư viện sách</Text>
@@ -505,7 +502,7 @@ const SearchScreen = ({ navigation, route }: any) => {
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm sách, tác giả, NXB..."
-            placeholderTextColor="#3c3c4399"
+            placeholderTextColor={theme.colors.textSecondary}
             value={query}
             onChangeText={setQuery}
             autoFocus={true}
@@ -644,7 +641,7 @@ const SearchScreen = ({ navigation, route }: any) => {
         {/* Book List/Grid */}
         {loading ? (
           <View style={styles.loadingSpinner}>
-            <ActivityIndicator size="large" color="#007aff" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={styles.loadingText}>Đang tải...</Text>
           </View>
         ) : currentView === "list" ? (
@@ -687,7 +684,7 @@ const SearchScreen = ({ navigation, route }: any) => {
           />
         )}
       </View>
-    </View>
+    </ThemedView>
   );
 };
 

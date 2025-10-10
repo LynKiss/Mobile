@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb", padding: 16 },
+  container: { flex: 1, backgroundColor: "transparent", padding: 16 },
 
   // Welcome
   welcomeCard: { borderRadius: 20, padding: 16, marginBottom: 20 },

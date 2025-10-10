@@ -175,8 +175,8 @@ const ProfileScreen = ({ navigation }: any) => {
         <Switch
           value={giaTri}
           onValueChange={onPress}
-          trackColor={{ false: "#D1D5DB", true: MAU_SAC.xanhDuong }}
-          thumbColor={giaTri ? MAU_SAC.trang : "#f4f3f4"}
+          trackColor={{ false: "#D1D5DB", true: theme.colors.primary }}
+          thumbColor={giaTri ? "#ffffff" : "#f4f3f4"}
         />
       ) : (
         <TouchableOpacity onPress={onPress}>
@@ -196,11 +196,31 @@ const ProfileScreen = ({ navigation }: any) => {
     coThongBao = false,
   }: any) => (
     <TouchableOpacity
-      style={[styles.nutChucNang, { backgroundColor: theme.colors.surface }]}
+      style={[
+        styles.nutChucNang,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          borderWidth: 1,
+        },
+      ]}
       onPress={onPress}
     >
-      <View style={[styles.iconNut, { backgroundColor: mauSac }]}>
-        <Ionicons name={icon} size={KIEU_CHU.trungBinh} color={MAU_SAC.trang} />
+      <View
+        style={[
+          styles.iconNut,
+          {
+            backgroundColor: theme.colors.paper,
+            borderColor: theme.colors.border,
+            borderWidth: 1,
+          },
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={KIEU_CHU.trungBinh}
+          color={theme.colors.primary}
+        />
       </View>
       <View style={styles.thongTinNut}>
         <Text style={[styles.tieuDeNut, { color: theme.colors.text }]}>

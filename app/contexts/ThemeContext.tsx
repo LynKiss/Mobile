@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { classicDarkPalette, classicPalette, tokens } from "../theme/tokens";
 
 // Định nghĩa theme
 export interface Theme {
@@ -23,17 +24,17 @@ export interface Theme {
 const lightTheme: Theme = {
   isDark: false,
   colors: {
-    primary: "#007bff",
-    secondary: "#6c757d",
-    background: "#ffffff",
-    surface: "#f8f9fa",
-    text: "#333333",
-    textSecondary: "#666666",
-    border: "#dee2e6",
-    error: "#dc3545",
-    success: "#28a745",
-    warning: "#ffc107",
-    info: "#17a2b8",
+    primary: classicPalette.primary,
+    secondary: classicPalette.accent,
+    background: classicPalette.parchment,
+    surface: classicPalette.surface,
+    text: classicPalette.ink,
+    textSecondary: "#616E7C",
+    border: classicPalette.border,
+    error: classicPalette.error,
+    success: classicPalette.success,
+    warning: classicPalette.warning,
+    info: classicPalette.info,
   },
 };
 
@@ -41,17 +42,17 @@ const lightTheme: Theme = {
 const darkTheme: Theme = {
   isDark: true,
   colors: {
-    primary: "#0d6efd",
-    secondary: "#6c757d",
-    background: "#121212",
-    surface: "#1e1e1e",
-    text: "#ffffff",
-    textSecondary: "#b0b0b0",
-    border: "#333333",
-    error: "#ff6b6b",
-    success: "#51cf66",
-    warning: "#ffd43b",
-    info: "#74c0fc",
+    primary: classicDarkPalette.primary,
+    secondary: classicDarkPalette.accent,
+    background: classicDarkPalette.parchment,
+    surface: classicDarkPalette.surface,
+    text: classicDarkPalette.ink,
+    textSecondary: "#9FB3C8",
+    border: classicDarkPalette.border,
+    error: classicDarkPalette.error,
+    success: classicDarkPalette.success,
+    warning: classicDarkPalette.warning,
+    info: classicDarkPalette.info,
   },
 };
 

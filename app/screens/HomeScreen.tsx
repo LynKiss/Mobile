@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import { ThemedView, ThemedText } from "../components/Themed";
+import { useTheme } from "../contexts/ThemeContext";
 import GradientView from "../components/GradientView";
+import SectionHeader from "../components/SectionHeader";
+import Badge from "../components/Badge";
 import styles from "../styles/HomeScreen.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
@@ -75,30 +79,35 @@ const HomeScreen = ({ navigation }: any) => {
     fetchData();
   }, [authUser]);
 
+  const { theme } = useTheme();
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
+      <ThemedView style={styles.container}>
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
     );
   }
 
   if (!user) {
     return (
-      <View style={styles.container}>
-        <Text>Không có dữ liệu người dùng</Text>
-      </View>
+      <ThemedView style={styles.container}>
+        <ThemedText>Không có dữ liệu người dùng</ThemedText>
+      </ThemedView>
     );
   }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={{ paddingBottom: 120 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Welcome Card */}
-      <GradientView colors={["#3b82f6", "#7c3aed"]} style={styles.welcomeCard}>
+      <GradientView
+        colors={[theme.colors.primary, theme.colors.primary]}
+        style={styles.welcomeCard}
+      >
         <View style={styles.welcomeTop}>
           <View>
             <Image
@@ -173,39 +182,35 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* Featured Books */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>📚 Sách nổi bật</Text>
-          <TouchableOpacity>
-            <Text style={styles.sectionLink}>Xem tất cả ›</Text>
-          </TouchableOpacity>
-        </View>
+        <SectionHeader title="Sách nổi bật" rightText="Xem tất cả ›" />
         {featuredBooks.length === 0 ? (
-          <Text>Không có sách nổi bật</Text>
+          <ThemedText>Không có sách nổi bật</ThemedText>
         ) : (
           featuredBooks.map((book) => (
             <View key={book.id} style={styles.bookCard}>
-              <GradientView colors={book.spineColor} style={styles.bookSpine}>
+              <GradientView
+                colors={[theme.colors.secondary, theme.colors.secondary]}
+                style={styles.bookSpine}
+              >
                 <Text style={styles.spineIcon}>{book.icon}</Text>
               </GradientView>
               <View style={{ flex: 1 }}>
                 <Text style={styles.bookTitle}>{book.title}</Text>
                 <Text style={styles.bookAuthor}>✍️ {book.author}</Text>
                 <View style={styles.bookMeta}>
-                  <Text
-                    style={[
-                      styles.bookStatus,
-                      {
-                        backgroundColor: book.available ? "#dcfce7" : "#ffedd5",
-                      },
-                    ]}
-                  >
-                    {book.available ? "✅ Có sẵn" : `⏳ Còn ${book.left} cuốn`}
-                  </Text>
+                  <Badge variant="subtle">
+                    {book.available ? "Có sẵn" : `Còn ${book.left} cuốn`}
+                  </Badge>
                   <Text style={styles.bookRating}>
                     ⭐ {book.rating} ({book.reviews})
                   </Text>
                 </View>
-                <TouchableOpacity style={styles.borrowBtn}>
+                <TouchableOpacity
+                  style={[
+                    styles.borrowBtn,
+                    { backgroundColor: theme.colors.primary },
+                  ]}
+                >
                   <Text style={styles.borrowBtnText}>Mượn ngay</Text>
                 </TouchableOpacity>
               </View>
@@ -216,12 +221,22 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* Important Notice */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Thông báo quan trọng</Text>
+        <SectionHeader title="Thông báo quan trọng" />
         {importantNotices.length === 0 ? (
-          <Text>Không có thông báo quan trọng</Text>
+          <ThemedText>Không có thông báo quan trọng</ThemedText>
         ) : (
-          <View style={styles.noticeCard}>
-            <View style={styles.noticeIcon}>
+          <View
+            style={[
+              styles.noticeCard,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <View
+              style={[
+                styles.noticeIcon,
+                { backgroundColor: theme.colors.secondary },
+              ]}
+            >
               <Text style={{ color: "#fff", fontWeight: "bold" }}>!</Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -229,7 +244,12 @@ const HomeScreen = ({ navigation }: any) => {
                 Nhắc nhở quan trọng
               </Text>
               <Text>Sách "JavaScript cơ bản" sẽ hết hạn trong 2 ngày nữa</Text>
-              <TouchableOpacity style={styles.noticeBtn}>
+              <TouchableOpacity
+                style={[
+                  styles.noticeBtn,
+                  { backgroundColor: theme.colors.secondary },
+                ]}
+              >
                 <Text style={styles.noticeBtnText}>Gia hạn ngay</Text>
               </TouchableOpacity>
             </View>
@@ -239,11 +259,10 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* AI Recommendations */}
       {recommendations.length === 0 ? (
-        <Text>Không có gợi ý</Text>
+        <ThemedText>Không có gợi ý</ThemedText>
       ) : (
-        <GradientView
-          colors={["#a855f7", "#ec4899", "#ef4444"]}
-          style={styles.aiCard}
+        <ThemedView
+          style={[styles.aiCard, { backgroundColor: theme.colors.surface }]}
         >
           <View
             style={{
@@ -256,23 +275,34 @@ const HomeScreen = ({ navigation }: any) => {
               <Text style={{ fontSize: 20 }}>🤖</Text>
             </View>
             <View>
-              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff" }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: theme.colors.text,
+                }}
+              >
                 AI Gợi ý cho bạn
               </Text>
-              <Text style={{ color: "#fff", opacity: 0.9 }}>
+              <Text style={{ color: theme.colors.textSecondary }}>
                 Dựa trên sở thích đọc của bạn
               </Text>
             </View>
           </View>
           <View style={styles.aiBook}>
-            <View style={styles.aiBookSpine}>
+            <View
+              style={[
+                styles.aiBookSpine,
+                { backgroundColor: theme.colors.secondary },
+              ]}
+            >
               <Text style={{ color: "#fff" }}>🧠</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: "700", color: "#fff" }}>
+              <Text style={{ fontWeight: "700", color: theme.colors.text }}>
                 {recommendations[0].title}
               </Text>
-              <Text style={{ color: "#fff", opacity: 0.9 }}>
+              <Text style={{ color: theme.colors.textSecondary }}>
                 {recommendations[0].description}
               </Text>
               <View style={{ flexDirection: "row", marginTop: 4 }}>
@@ -283,15 +313,18 @@ const HomeScreen = ({ navigation }: any) => {
               </View>
             </View>
             <TouchableOpacity style={styles.aiBtn}>
-              <Text style={{ color: "#fff" }}>Xem ngay</Text>
+              <Text style={{ color: theme.colors.text }}>Xem ngay</Text>
             </TouchableOpacity>
           </View>
-        </GradientView>
+        </ThemedView>
       )}
 
       {/* Goals & Rank */}
       <View style={styles.row}>
-        <GradientView colors={["#3b82f6", "#9333ea"]} style={styles.goalCard}>
+        <GradientView
+          colors={[theme.colors.primary, theme.colors.primary]}
+          style={styles.goalCard}
+        >
           <Text style={{ fontSize: 28 }}>🎯</Text>
           <Text style={styles.goalTitle}>Mục tiêu tháng</Text>
           <Text style={{ color: "#fff", opacity: 0.9 }}>8/10 cuốn</Text>
@@ -300,7 +333,10 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
           <Text style={styles.goalSub}>Còn 2 cuốn nữa! 💪</Text>
         </GradientView>
-        <GradientView colors={["#facc15", "#f97316"]} style={styles.goalCard}>
+        <GradientView
+          colors={[theme.colors.secondary, theme.colors.secondary]}
+          style={styles.goalCard}
+        >
           <Text style={{ fontSize: 28 }}>🏆</Text>
           <Text style={styles.goalTitle}>Hạng độc giả</Text>
           <Text style={{ color: "#fff", opacity: 0.9 }}>Bạc</Text>
@@ -327,11 +363,13 @@ const HomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.quickCard}>
+      <View
+        style={[styles.quickCard, { backgroundColor: theme.colors.surface }]}
+      >
         <Text style={styles.quickTitle}>⚡ Thao tác nhanh</Text>
         <View style={styles.quickRow}>
           <TouchableOpacity
-            style={[styles.quickBtn, { backgroundColor: "#dbeafe" }]}
+            style={[styles.quickBtn, { backgroundColor: theme.colors.surface }]}
           >
             <Text style={styles.quickIcon}>🔍</Text>
             <View>
@@ -340,7 +378,7 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.quickBtn, { backgroundColor: "#dcfce7" }]}
+            style={[styles.quickBtn, { backgroundColor: theme.colors.surface }]}
           >
             <Text style={styles.quickIcon}>📚</Text>
             <View>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useBooks } from "../navigation/BookContext";
 import styles from "../styles/CartScreen.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,6 +18,22 @@ const { height } = Dimensions.get("window");
 const CartScreen = ({ navigation }: any) => {
   const { cartItems, removeFromCart, updateCartItemQuantity, clearCart } =
     useBooks();
+
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    const currentIds = new Set(cartItems.map((item) => item.id));
+    setSelectedItems(
+      (prev) => new Set([...prev].filter((id) => currentIds.has(id)))
+    );
+  }, [cartItems]);
+
+  useEffect(() => {
+    setSelectAll(
+      selectedItems.size === cartItems.length && cartItems.length > 0
+    );
+  }, [selectedItems, cartItems]);
 
   // 👉 Hàm riêng để gọi API
   const doBorrowBooks = async () => {
@@ -29,10 +46,11 @@ const CartScreen = ({ navigation }: any) => {
         return;
       }
 
+      const selectedBooks = getSelectedItems();
       const payload = {
         ngay_du_kien_muon: new Date().toISOString().split("T")[0],
         ghi_chu: "", // sau này có thể nhập thêm
-        chi_tiet: cartItems.map((item) => ({
+        chi_tiet: selectedBooks.map((item) => ({
           ma_sach: item.book.ma_sach,
           so_luong: item.quantity,
         })),
@@ -68,17 +86,17 @@ const CartScreen = ({ navigation }: any) => {
   const handleBorrowAll = () => {
     console.log("==> Bắt đầu handleBorrowAll");
 
-    if (cartItems.length === 0) {
-      Alert.alert("Thông báo", "Giỏ hàng trống!");
+    const selectedBooks = getSelectedItems();
+    if (selectedBooks.length === 0) {
+      Alert.alert("Thông báo", "Vui lòng chọn sách để mượn!");
       return;
     }
 
     Alert.alert(
       "Xác nhận mượn sách",
-      `Bạn muốn mượn ${cartItems.length} cuốn sách với tổng ${cartItems.reduce(
-        (total, item) => total + item.quantity,
-        0
-      )} quyển?`,
+      `Bạn muốn mượn ${
+        selectedBooks.length
+      } cuốn sách với tổng ${getSelectedTotalItems()} quyển?`,
       [
         { text: "Hủy", style: "cancel" },
         {
@@ -124,6 +142,40 @@ const CartScreen = ({ navigation }: any) => {
 
   const getTotalBooks = () => {
     return cartItems.length;
+  };
+
+  const toggleSelectItem = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+    setSelectAll(newSelected.size === cartItems.length);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems(new Set());
+      setSelectAll(false);
+    } else {
+      const allIds = new Set(cartItems.map((item) => item.id));
+      setSelectedItems(allIds);
+      setSelectAll(true);
+    }
+  };
+
+  const getSelectedItems = () => {
+    return cartItems.filter((item) => selectedItems.has(item.id));
+  };
+
+  const getSelectedTotalItems = () => {
+    return getSelectedItems().reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const getSelectedTotalBooks = () => {
+    return getSelectedItems().length;
   };
 
   if (cartItems.length === 0) {
@@ -172,6 +224,31 @@ const CartScreen = ({ navigation }: any) => {
         <View style={styles.headerRight} />
       </View>
 
+      {/* Select All */}
+      <View
+        style={{
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+          backgroundColor: "#ffffff",
+          borderBottomWidth: 1,
+          borderBottomColor: "#e9ecef",
+        }}
+      >
+        <TouchableOpacity
+          style={{ flexDirection: "row", alignItems: "center" }}
+          onPress={toggleSelectAll}
+        >
+          <Ionicons
+            name={selectAll ? "checkbox" : "square-outline"}
+            size={24}
+            color={selectAll ? "#007bff" : "#666"}
+          />
+          <Text style={{ marginLeft: 8, fontSize: 16, color: "#333" }}>
+            Chọn tất cả ({cartItems.length} sách)
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Cart Items */}
       <ScrollView
         style={styles.scrollContainer}
@@ -179,6 +256,18 @@ const CartScreen = ({ navigation }: any) => {
       >
         {cartItems.map((item) => (
           <View key={item.book.ma_sach} style={styles.cartItem}>
+            <TouchableOpacity
+              style={{ marginRight: 12, justifyContent: "center" }}
+              onPress={() => toggleSelectItem(item.id)}
+            >
+              <Ionicons
+                name={
+                  selectedItems.has(item.id) ? "checkbox" : "square-outline"
+                }
+                size={24}
+                color={selectedItems.has(item.id) ? "#007bff" : "#666"}
+              />
+            </TouchableOpacity>
             <View style={styles.bookInfo}>
               <View style={styles.bookCover}>
                 {item.book.hinh_bia ? (
@@ -268,8 +357,22 @@ const CartScreen = ({ navigation }: any) => {
           <Text style={styles.clearButtonText}>Xóa giỏ</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.borrowButton} onPress={handleBorrowAll}>
-          <Text style={styles.borrowButtonText}>Xác nhận</Text>
+        <TouchableOpacity
+          style={[
+            styles.borrowButton,
+            selectedItems.size === 0 && { backgroundColor: "#e9ecef" },
+          ]}
+          onPress={handleBorrowAll}
+          disabled={selectedItems.size === 0}
+        >
+          <Text
+            style={[
+              styles.borrowButtonText,
+              selectedItems.size === 0 && { color: "#666" },
+            ]}
+          >
+            Xác nhận ({selectedItems.size})
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
