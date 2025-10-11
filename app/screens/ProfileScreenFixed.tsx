@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,8 @@ import {
   Alert,
   Switch,
   Dimensions,
-  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -35,7 +33,7 @@ const ProfileScreen = ({ navigation }: any) => {
   const [thongBaoEmail, setThongBaoEmail] = useState(true);
 
   // ===== DỮ LIỆU MẪU =====
-  const [thongTinNguoiDung, setThongTinNguoiDung] = useState({
+  const thongTinNguoiDung = {
     hoTen: "Nguyễn Văn A",
     email: "nguyenvana@email.com",
     maSinhVien: "SV2024001",
@@ -46,47 +44,7 @@ const ProfileScreen = ({ navigation }: any) => {
     diemDanhGia: 4.9,
     chuoiLienTuc: 15,
     hangNguoiDung: "Vàng",
-    avatar: null as string | null,
-  });
-
-  // ===== FETCH PROFILE DATA =====
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const token = await AsyncStorage.getItem("userToken");
-      if (!token) return;
-
-      try {
-        const response = await fetch(
-          "http://localhost:3000/api/nguoi_dung/profile/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
-        if (response.ok) {
-          setThongTinNguoiDung({
-            hoTen: data.ho_ten,
-            email: data.email,
-            maSinhVien: data.ma_nguoi_dung.toString(),
-            ngayThamGia: "15/08/2024", // Keep default or calculate
-            soSachDaMuon: data.total_borrowed,
-            soSachDangMuon: data.currently_borrowed,
-            hangThanhVien: data.is_vip ? "VIP" : "Thường",
-            diemDanhGia: parseFloat(data.avg_rating),
-            chuoiLienTuc: data.streak_days,
-            hangNguoiDung: data.rank_name,
-            avatar: data.avatar,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  };
 
   // ===== XỬ LÝ SỰ KIỆN =====
   const xuLyDangXuat = async () => {
@@ -128,17 +86,6 @@ const ProfileScreen = ({ navigation }: any) => {
     );
   };
 
-  const xuLyXemThongBao = () => {
-    Alert.alert(
-      "📬 Danh sách thông báo",
-      "🔔 Bạn có 3 thông báo mới:\n\n• 📚 Sách 'Lập trình React Native' sắp hết hạn (2 ngày)\n• ⭐ Đánh giá của bạn cho sách 'JavaScript cơ bản' đã được duyệt\n• 🎉 Chúc mừng! Bạn đã đạt cấp độ VIP\n\n💡 Nhấn vào thông báo để xem chi tiết",
-      [
-        { text: "Đã hiểu", style: "default" },
-        { text: "Xem tất cả", style: "default" },
-      ]
-    );
-  };
-
   // ===== COMPONENTS TÁI SỬ DỤNG =====
   const ItemThongTinCaNhan = ({ tieuDe, giaTri, coTheNhan }: any) => (
     <TouchableOpacity
@@ -175,8 +122,8 @@ const ProfileScreen = ({ navigation }: any) => {
         <Switch
           value={giaTri}
           onValueChange={onPress}
-          trackColor={{ false: "#D1D5DB", true: theme.colors.primary }}
-          thumbColor={giaTri ? "#ffffff" : "#f4f3f4"}
+          trackColor={{ false: "#D1D5DB", true: MAU_SAC.xanhDuong }}
+          thumbColor={giaTri ? MAU_SAC.trang : "#f4f3f4"}
         />
       ) : (
         <TouchableOpacity onPress={onPress}>
@@ -196,31 +143,11 @@ const ProfileScreen = ({ navigation }: any) => {
     coThongBao = false,
   }: any) => (
     <TouchableOpacity
-      style={[
-        styles.nutChucNang,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          borderWidth: 1,
-        },
-      ]}
+      style={[styles.nutChucNang, { backgroundColor: theme.colors.surface }]}
       onPress={onPress}
     >
-      <View
-        style={[
-          styles.iconNut,
-          {
-            backgroundColor: theme.colors.paper,
-            borderColor: theme.colors.border,
-            borderWidth: 1,
-          },
-        ]}
-      >
-        <Ionicons
-          name={icon}
-          size={KIEU_CHU.trungBinh}
-          color={theme.colors.primary}
-        />
+      <View style={[styles.iconNut, { backgroundColor: mauSac }]}>
+        <Ionicons name={icon} size={KIEU_CHU.trungBinh} color={MAU_SAC.trang} />
       </View>
       <View style={styles.thongTinNut}>
         <Text style={[styles.tieuDeNut, { color: theme.colors.text }]}>
@@ -248,16 +175,9 @@ const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.thongTinNguoiDung}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              {thongTinNguoiDung.avatar ? (
-                <Image
-                  source={{ uri: thongTinNguoiDung.avatar }}
-                  style={{ width: 64, height: 64, borderRadius: 32 }}
-                />
-              ) : (
-                <Text style={styles.chuCaiAvatar}>
-                  {thongTinNguoiDung.hoTen.charAt(0)}
-                </Text>
-              )}
+              <Text style={styles.chuCaiAvatar}>
+                {thongTinNguoiDung.hoTen.charAt(0)}
+              </Text>
             </View>
             <View style={styles.trangThaiOnline} />
           </View>
@@ -328,14 +248,18 @@ const ProfileScreen = ({ navigation }: any) => {
             tieuDe="Chỉnh sửa thông tin"
             icon="person-outline"
             mauSac={MAU_SAC.xanhDuong}
-            onPress={() => navigation.navigate("EditProfile")}
+            onPress={() =>
+              Alert.alert("Thông báo", "Tính năng đang phát triển")
+            }
           />
 
           <NutChucNang
             tieuDe="Đổi mật khẩu"
             icon="lock-closed-outline"
             mauSac={MAU_SAC.xanhLa}
-            onPress={() => navigation.navigate("ChangePassword")}
+            onPress={() =>
+              Alert.alert("Thông báo", "Tính năng đang phát triển")
+            }
           />
 
           <NutChucNang
@@ -352,14 +276,18 @@ const ProfileScreen = ({ navigation }: any) => {
             tieuDe="Lịch sử mượn sách"
             icon="time-outline"
             mauSac={MAU_SAC.tim}
-            onPress={() => navigation.navigate("BorrowingHistory")}
+            onPress={() =>
+              Alert.alert("Thông báo", "Tính năng đang phát triển")
+            }
           />
 
           <NutChucNang
             tieuDe="Trợ giúp & Hỗ trợ"
             icon="help-circle-outline"
             mauSac={MAU_SAC.xanhNhat}
-            onPress={() => navigation.navigate("HelpScreen")}
+            onPress={() =>
+              Alert.alert("Thông báo", "Tính năng đang phát triển")
+            }
           />
 
           <NutChucNang
@@ -585,18 +513,7 @@ const ProfileScreen = ({ navigation }: any) => {
           {manHinhHienTai === "chinhSuaHoSo" && "Chỉnh sửa thông tin"}
           {manHinhHienTai === "caiDatThongBao" && "Cài đặt thông báo"}
         </Text>
-
-        {/* Nút thông báo ở góc phải */}
-        <TouchableOpacity style={styles.nutThongBao} onPress={xuLyXemThongBao}>
-          <Ionicons
-            name="notifications"
-            size={KIEU_CHU.trungBinhLon}
-            color={theme.colors.primary}
-          />
-          <View style={styles.dauChamThongBaoHeader} />
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={styles.nutQuayLai}
           onPress={() => setManHinhHienTai("trangCaNhan")}
         >
@@ -605,7 +522,7 @@ const ProfileScreen = ({ navigation }: any) => {
             size={KIEU_CHU.trungBinhLon}
             color={theme.colors.primary}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
 
       {renderManHinh()}

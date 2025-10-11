@@ -27,12 +27,26 @@ type RootStackParamList = {
   About: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
   HomeLayout: undefined;
   HomeNew: undefined;
   Cart: undefined;
   Checkout: undefined;
   HomeDrawer: undefined;
   CartDrawer: undefined;
+  MainTab: undefined;
+  AuthStack: undefined;
+  BookDetail: undefined;
+  Notification: undefined;
+  ManHinhThanhToan: undefined;
+  ManHinhDocSachDienTu: undefined;
+  ManHinhChat: undefined;
+  ManHinhDanhGia: undefined;
+  ManHinhQuanLyDatCho: undefined;
+  ManHinhPhat: undefined;
+  ManHinhThanhTich: undefined;
+  ManHinhSuKien: undefined;
+  ManHinhDanhSachDoc: undefined;
 };
 
 export { RootStackParamList };

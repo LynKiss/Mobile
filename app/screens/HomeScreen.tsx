@@ -1,69 +1,138 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import { ThemedView, ThemedText } from "../components/Themed";
+import { useTheme } from "../contexts/ThemeContext";
 import GradientView from "../components/GradientView";
+import SectionHeader from "../components/SectionHeader";
+import Badge from "../components/Badge";
 import styles from "../styles/HomeScreen.styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "../contexts/AuthContext";
 
 const HomeScreen = ({ navigation }: any) => {
-  const currentUser = {
-    name: "Nguyễn Văn A",
-    avatar: "https://i.pravatar.cc/120",
-    membershipType: "vip",
-    readingStreak: 15,
-    borrowedBooks: 3,
-    totalBorrowed: 24,
-    wishlist: 5,
-  };
+  const { user: authUser } = useAuth();
+  const [user, setUser] = useState<any>(null);
+  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+  const [importantNotices, setImportantNotices] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredBooks = [
-    {
-      id: 1,
-      title: "Lập trình React Native",
-      author: "Nguyễn Văn B",
-      available: true,
-      rating: 4.8,
-      reviews: 124,
-      spineColor: ["#f87171", "#dc2626"],
-      icon: "📖",
-    },
-    {
-      id: 2,
-      title: "Mobile App Development",
-      author: "John Smith",
-      available: false,
-      left: 2,
-      rating: 4.6,
-      reviews: 89,
-      spineColor: ["#60a5fa", "#2563eb"],
-      icon: "📱",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        if (!token) {
+          console.error("No user token found");
+          setLoading(false);
+          return;
+        }
+
+        let userId = await AsyncStorage.getItem("userId");
+        if (!userId && authUser && authUser.id) {
+          userId = authUser.id;
+        }
+        if (!userId) {
+          console.error("No user ID found");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `http://localhost:3000/api/nguoi_dung/home/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error("API response not ok:", response.status);
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        setUser(data.user);
+        setFeaturedBooks(
+          (data.featuredBooks || [])
+            .map((book: any) => ({
+              ...book,
+              available: book.available === 1,
+              rating: parseFloat(book.rating),
+              reviews: book.reviews,
+              left: parseInt(book.leftCopies),
+              spineColor: ["#f87171", "#dc2626"],
+              icon: "📖",
+            }))
+            .filter((book: any) => book.available)
+            .slice(0, 2)
+        );
+        setImportantNotices(data.importantNotices || []);
+        setRecommendations(data.recommendations || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [authUser]);
+
+  const { theme } = useTheme();
+
+  if (loading) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Không có dữ liệu người dùng</ThemedText>
+      </ThemedView>
+    );
+  }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={{ paddingBottom: 120 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Welcome Card */}
-      <GradientView colors={["#3b82f6", "#7c3aed"]} style={styles.welcomeCard}>
+      <GradientView
+        colors={[theme.colors.primary, theme.colors.primary]}
+        style={styles.welcomeCard}
+      >
         <View style={styles.welcomeTop}>
           <View>
-            <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
+            <Image
+              source={{ uri: user.avatar || "https://i.pravatar.cc/120" }}
+              style={styles.avatar}
+            />
             <View style={styles.onlineDot} />
           </View>
           <View style={{ flex: 1, marginLeft: 35 }}>
             <Text style={styles.welcomeTitle}>Chào mừng trở lại!</Text>
-            <Text style={styles.welcomeName}>{currentUser.name}</Text>
+            <Text style={styles.welcomeName}>
+              {user.name || "Không có tên"}
+            </Text>
             <View style={styles.badgesRow}>
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
-                  🏆 {currentUser.membershipType === "vip" ? "VIP" : "Member"}
+                  🏆{" "}
+                  {user.membershipType === "vip"
+                    ? "VIP"
+                    : user.membershipType || "Member"}
                 </Text>
               </View>
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
-                  🔥 Streak {currentUser.readingStreak} ngày
+                  🔥 Streak {user.readingStreak ?? 0} ngày
                 </Text>
               </View>
             </View>
@@ -79,10 +148,10 @@ const HomeScreen = ({ navigation }: any) => {
             ]}
           >
             <Text style={[styles.statNum, { color: "#facc15" }]}>
-              {currentUser.borrowedBooks}
+              {user.borrowedBooks ?? 0}
             </Text>
             <Text style={styles.statLabel}>📚 Đang mượn</Text>
-            <Text style={styles.statSub}>Tối đa 5 cuốn</Text>
+            <Text style={styles.statSub}>Tối đa 15 cuốn</Text>
           </View>
           <View
             style={[
@@ -91,7 +160,7 @@ const HomeScreen = ({ navigation }: any) => {
             ]}
           >
             <Text style={[styles.statNum, { color: "#22d3ee" }]}>
-              {currentUser.totalBorrowed}
+              {user.totalBorrowed ?? 0}
             </Text>
             <Text style={styles.statLabel}>✅ Đã mượn</Text>
             <Text style={styles.statSub}>Tổng cộng</Text>
@@ -103,7 +172,7 @@ const HomeScreen = ({ navigation }: any) => {
             ]}
           >
             <Text style={[styles.statNum, { color: "#ec4899" }]}>
-              {currentUser.wishlist}
+              {user.wishlist ?? 0}
             </Text>
             <Text style={styles.statLabel}>❤️ Yêu thích</Text>
             <Text style={styles.statSub}>Danh sách</Text>
@@ -113,109 +182,149 @@ const HomeScreen = ({ navigation }: any) => {
 
       {/* Featured Books */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>📚 Sách nổi bật</Text>
-          <TouchableOpacity>
-            <Text style={styles.sectionLink}>Xem tất cả ›</Text>
-          </TouchableOpacity>
-        </View>
-        {featuredBooks.map((book) => (
-          <View key={book.id} style={styles.bookCard}>
-            <GradientView colors={book.spineColor} style={styles.bookSpine}>
-              <Text style={styles.spineIcon}>{book.icon}</Text>
-            </GradientView>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bookTitle}>{book.title}</Text>
-              <Text style={styles.bookAuthor}>✍️ {book.author}</Text>
-              <View style={styles.bookMeta}>
-                <Text
+        <SectionHeader title="Sách nổi bật" rightText="Xem tất cả ›" />
+        {featuredBooks.length === 0 ? (
+          <ThemedText>Không có sách nổi bật</ThemedText>
+        ) : (
+          featuredBooks.map((book) => (
+            <View key={book.id} style={styles.bookCard}>
+              <GradientView
+                colors={[theme.colors.secondary, theme.colors.secondary]}
+                style={styles.bookSpine}
+              >
+                <Text style={styles.spineIcon}>{book.icon}</Text>
+              </GradientView>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bookTitle}>{book.title}</Text>
+                <Text style={styles.bookAuthor}>✍️ {book.author}</Text>
+                <View style={styles.bookMeta}>
+                  <Badge variant="subtle">
+                    {book.available ? "Có sẵn" : `Còn ${book.left} cuốn`}
+                  </Badge>
+                  <Text style={styles.bookRating}>
+                    ⭐ {book.rating} ({book.reviews})
+                  </Text>
+                </View>
+                <TouchableOpacity
                   style={[
-                    styles.bookStatus,
-                    { backgroundColor: book.available ? "#dcfce7" : "#ffedd5" },
+                    styles.borrowBtn,
+                    { backgroundColor: theme.colors.primary },
                   ]}
                 >
-                  {book.available ? "✅ Có sẵn" : `⏳ Còn ${book.left} cuốn`}
-                </Text>
-                <Text style={styles.bookRating}>
-                  ⭐ {book.rating} ({book.reviews})
-                </Text>
+                  <Text style={styles.borrowBtnText}>Mượn ngay</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.borrowBtn}>
-                <Text style={styles.borrowBtnText}>Mượn ngay</Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </View>
 
       {/* Important Notice */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Thông báo quan trọng</Text>
-        <View style={styles.noticeCard}>
-          <View style={styles.noticeIcon}>
-            <Text style={{ color: "#fff", fontWeight: "bold" }}>!</Text>
+        <SectionHeader title="Thông báo quan trọng" />
+        {importantNotices.length === 0 ? (
+          <ThemedText>Không có thông báo quan trọng</ThemedText>
+        ) : (
+          <View
+            style={[
+              styles.noticeCard,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <View
+              style={[
+                styles.noticeIcon,
+                { backgroundColor: theme.colors.secondary },
+              ]}
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>!</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: "600", marginBottom: 4 }}>
+                Nhắc nhở quan trọng
+              </Text>
+              <Text>Sách "JavaScript cơ bản" sẽ hết hạn trong 2 ngày nữa</Text>
+              <TouchableOpacity
+                style={[
+                  styles.noticeBtn,
+                  { backgroundColor: theme.colors.secondary },
+                ]}
+              >
+                <Text style={styles.noticeBtnText}>Gia hạn ngay</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontWeight: "600", marginBottom: 4 }}>
-              Nhắc nhở quan trọng
-            </Text>
-            <Text>Sách "JavaScript cơ bản" sẽ hết hạn trong 2 ngày nữa</Text>
-            <TouchableOpacity style={styles.noticeBtn}>
-              <Text style={styles.noticeBtnText}>Gia hạn ngay</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
       </View>
 
       {/* AI Recommendations */}
-      <GradientView
-        colors={["#a855f7", "#ec4899", "#ef4444"]}
-        style={styles.aiCard}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
+      {recommendations.length === 0 ? (
+        <ThemedText>Không có gợi ý</ThemedText>
+      ) : (
+        <ThemedView
+          style={[styles.aiCard, { backgroundColor: theme.colors.surface }]}
         >
-          <View style={styles.aiIcon}>
-            <Text style={{ fontSize: 20 }}>🤖</Text>
-          </View>
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#fff" }}>
-              AI Gợi ý cho bạn
-            </Text>
-            <Text style={{ color: "#fff", opacity: 0.9 }}>
-              Dựa trên sở thích đọc của bạn
-            </Text>
-          </View>
-        </View>
-        <View style={styles.aiBook}>
-          <View style={styles.aiBookSpine}>
-            <Text style={{ color: "#fff" }}>🧠</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontWeight: "700", color: "#fff" }}>
-              Machine Learning cơ bản
-            </Text>
-            <Text style={{ color: "#fff", opacity: 0.9 }}>
-              Phù hợp với lịch sử đọc của bạn
-            </Text>
-            <View style={{ flexDirection: "row", marginTop: 4 }}>
-              <Text style={styles.aiBadge}>⭐ 4.9</Text>
-              <Text style={styles.aiBadge}>🔥 Trending</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 12,
+            }}
+          >
+            <View style={styles.aiIcon}>
+              <Text style={{ fontSize: 20 }}>🤖</Text>
+            </View>
+            <View>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: theme.colors.text,
+                }}
+              >
+                AI Gợi ý cho bạn
+              </Text>
+              <Text style={{ color: theme.colors.textSecondary }}>
+                Dựa trên sở thích đọc của bạn
+              </Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.aiBtn}>
-            <Text style={{ color: "#fff" }}>Xem ngay</Text>
-          </TouchableOpacity>
-        </View>
-      </GradientView>
+          <View style={styles.aiBook}>
+            <View
+              style={[
+                styles.aiBookSpine,
+                { backgroundColor: theme.colors.secondary },
+              ]}
+            >
+              <Text style={{ color: "#fff" }}>🧠</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: "700", color: theme.colors.text }}>
+                {recommendations[0].title}
+              </Text>
+              <Text style={{ color: theme.colors.textSecondary }}>
+                {recommendations[0].description}
+              </Text>
+              <View style={{ flexDirection: "row", marginTop: 4 }}>
+                <Text style={styles.aiBadge}>
+                  ⭐ {recommendations[0].rating}
+                </Text>
+                <Text style={styles.aiBadge}>🔥 Trending</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.aiBtn}>
+              <Text style={{ color: theme.colors.text }}>Xem ngay</Text>
+            </TouchableOpacity>
+          </View>
+        </ThemedView>
+      )}
 
       {/* Goals & Rank */}
       <View style={styles.row}>
-        <GradientView colors={["#3b82f6", "#9333ea"]} style={styles.goalCard}>
+        <GradientView
+          colors={[theme.colors.primary, theme.colors.primary]}
+          style={styles.goalCard}
+        >
           <Text style={{ fontSize: 28 }}>🎯</Text>
           <Text style={styles.goalTitle}>Mục tiêu tháng</Text>
           <Text style={{ color: "#fff", opacity: 0.9 }}>8/10 cuốn</Text>
@@ -224,7 +333,10 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
           <Text style={styles.goalSub}>Còn 2 cuốn nữa! 💪</Text>
         </GradientView>
-        <GradientView colors={["#facc15", "#f97316"]} style={styles.goalCard}>
+        <GradientView
+          colors={[theme.colors.secondary, theme.colors.secondary]}
+          style={styles.goalCard}
+        >
           <Text style={{ fontSize: 28 }}>🏆</Text>
           <Text style={styles.goalTitle}>Hạng độc giả</Text>
           <Text style={{ color: "#fff", opacity: 0.9 }}>Bạc</Text>
@@ -251,11 +363,13 @@ const HomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.quickCard}>
+      <View
+        style={[styles.quickCard, { backgroundColor: theme.colors.surface }]}
+      >
         <Text style={styles.quickTitle}>⚡ Thao tác nhanh</Text>
         <View style={styles.quickRow}>
           <TouchableOpacity
-            style={[styles.quickBtn, { backgroundColor: "#dbeafe" }]}
+            style={[styles.quickBtn, { backgroundColor: theme.colors.surface }]}
           >
             <Text style={styles.quickIcon}>🔍</Text>
             <View>
@@ -264,7 +378,7 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.quickBtn, { backgroundColor: "#dcfce7" }]}
+            style={[styles.quickBtn, { backgroundColor: theme.colors.surface }]}
           >
             <Text style={styles.quickIcon}>📚</Text>
             <View>

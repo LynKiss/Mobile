@@ -4,16 +4,20 @@ import AuthStack from "./AuthStack";
 import MainTab from "./MainTab";
 import BookDetailScreen from "../screens/BookDetailScreen";
 import NotificationScreen from "../screens/NotificationScreen";
-import ManHinhThanhToan from "../screens/ManHinhThanhToan";
-import ManHinhDocSachDienTu from "../screens/ManHinhDocSachDienTu";
+
 import ManHinhChat from "../screens/ManHinhChat";
 import ManHinhDanhGia from "../screens/ManHinhDanhGia";
-import ManHinhQuanLyDatCho from "../screens/ManHinhQuanLyDatCho";
+
 import ManHinhPhat from "../screens/ManHinhPhat";
-import ManHinhThanhTich from "../screens/ManHinhThanhTich";
+
 import ManHinhSuKien from "../screens/ManHinhSuKien";
-import ManHinhDanhSachDoc from "../screens/ManHinhDanhSachDoc";
+
 import CartScreen from "../screens/CartScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import ManHinhHoTro from "../screens/ManHinhHoTro";
+import ManHinhChiTietHoTro from "../screens/ManHinhChiTietHoTro";
+import ManHinhChatbox from "../screens/ManHinhChatbox";
 import ToastNotification from "../components/ToastNotification";
 import { BookProvider } from "./BookContext";
 import { AuthProvider, navigationRef, useAuth } from "../contexts/AuthContext";
@@ -43,25 +47,32 @@ const AppNavigationContent = () => {
         <Stack.Screen name="MainTab" component={MainTab} />
         <Stack.Screen name="BookDetail" component={BookDetailScreen} />
         <Stack.Screen name="Notification" component={NotificationScreen} />
-        <Stack.Screen name="ManHinhThanhToan" component={ManHinhThanhToan} />
-        <Stack.Screen
-          name="ManHinhDocSachDienTu"
-          component={ManHinhDocSachDienTu}
-        />
+
         <Stack.Screen name="ManHinhChat" component={ManHinhChat} />
         <Stack.Screen name="ManHinhDanhGia" component={ManHinhDanhGia} />
-        <Stack.Screen
-          name="ManHinhQuanLyDatCho"
-          component={ManHinhQuanLyDatCho}
-        />
+
         <Stack.Screen name="ManHinhPhat" component={ManHinhPhat} />
-        <Stack.Screen name="ManHinhThanhTich" component={ManHinhThanhTich} />
+
         <Stack.Screen name="ManHinhSuKien" component={ManHinhSuKien} />
-        <Stack.Screen
-          name="ManHinhDanhSachDoc"
-          component={ManHinhDanhSachDoc}
-        />
+
         <Stack.Screen name="Cart" component={CartScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen
+          name="BorrowingHistory"
+          component={require("../screens/BorrowingHistoryScreen").default}
+        />
+        <Stack.Screen
+          name="BorrowingDetail"
+          component={require("../screens/BorrowingDetailScreen").default}
+        />
+        <Stack.Screen
+          name="HelpScreen"
+          component={require("../screens/HelpScreen").default}
+        />
+        <Stack.Screen name="ManHinhHoTro" component={ManHinhHoTro} />
+        <Stack.Screen name="ManHinhChatbox" component={ManHinhChatbox} />
+        <Stack.Screen name="SupportDetail" component={ManHinhChiTietHoTro} />
       </Stack.Navigator>
     </BookProvider>
   );

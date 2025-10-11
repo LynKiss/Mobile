@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useBooks } from "../navigation/BookContext";
 import styles from "../styles/WishlistScreen.styles";
 import GradientBox from "../components/GradientBox";
 import * as Animatable from "react-native-animatable";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const WishlistScreen = ({ navigation }: any) => {
@@ -114,7 +115,7 @@ const WishlistScreen = ({ navigation }: any) => {
                 resizeMode="cover"
               />
             ) : (
-              <Text style={styles.bookEmoji}>📚</Text>
+              <Ionicons name="book" size={32} color="#fff" />
             )}
           </GradientBox>
 
@@ -137,6 +138,12 @@ const WishlistScreen = ({ navigation }: any) => {
                   style={[styles.button, styles.borrowBtn]}
                   onPress={() => navigation.navigate("Borrow", { book })}
                 >
+                  <Ionicons
+                    name="book-outline"
+                    size={16}
+                    color="#fff"
+                    style={{ marginRight: 4 }}
+                  />
                   <Text style={styles.borrowBtnText}>Mượn ngay</Text>
                 </TouchableOpacity>
               )}
@@ -145,6 +152,12 @@ const WishlistScreen = ({ navigation }: any) => {
                   style={[styles.button, styles.disabledBtn]}
                   disabled
                 >
+                  <Ionicons
+                    name="close-circle"
+                    size={16}
+                    color={theme.colors.textSecondary}
+                    style={{ marginRight: 4 }}
+                  />
                   <Text style={styles.disabledBtnText}>Hết sách</Text>
                 </TouchableOpacity>
               )}
@@ -154,6 +167,12 @@ const WishlistScreen = ({ navigation }: any) => {
                   style={[styles.button, styles.borrowBtn]}
                   onPress={() => navigation.navigate("Borrow", { book })}
                 >
+                  <Ionicons
+                    name="book-outline"
+                    size={16}
+                    color="#fff"
+                    style={{ marginRight: 4 }}
+                  />
                   <Text style={styles.borrowBtnText}>Mượn ngay</Text>
                 </TouchableOpacity>
               )}
@@ -165,7 +184,7 @@ const WishlistScreen = ({ navigation }: any) => {
                   handleRemoveFromWishlist(item.ma_sach, book.tieu_de)
                 }
               >
-                <Text style={styles.removeBtnText}>🗑️</Text>
+                <Ionicons name="trash" size={16} color={theme.colors.error} />
               </TouchableOpacity>
             </View>
           </View>

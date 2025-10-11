@@ -302,7 +302,7 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = await AsyncStorage.getItem("userToken");
       if (!token) return false;
 
-      const response = await fetch("http://localhost:3000/api/sach-yeu-thich", {
+      const response = await fetch(`http://localhost:3000/api/sach_yeu_thich`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -331,7 +331,7 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!token) return false;
 
       const response = await fetch(
-        `http://localhost:3000/api/sach-yeu-thich/${bookId}`,
+        `http://localhost:3000/api/sach_yeu_thich/${bookId}`,
         {
           method: "DELETE",
           headers: {

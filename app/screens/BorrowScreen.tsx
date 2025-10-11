@@ -7,8 +7,11 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/BorrowScreen.styles";
+import SectionHeader from "../components/SectionHeader";
+import Badge from "../components/Badge";
 
 // Interface for borrowing slip from API
 interface BorrowingSlip {
@@ -37,7 +40,7 @@ interface PhanTrangPhanMuc {
   dangMuon: TrangThaiPhanTrang;
 }
 
-const BorrowScreen = () => {
+const BorrowScreen = ({ navigation }: any) => {
   const [borrowingSlips, setBorrowingSlips] = useState<BorrowingSlip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -376,17 +379,22 @@ const BorrowScreen = () => {
     );
   };
 
+  const { theme } = useTheme();
+
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#007aff" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>Đang tải danh sách mượn...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Tổng quan */}
       <View style={styles.overviewCard}>
         <Text style={styles.overviewTitle}>📊 Tổng quan</Text>
@@ -400,14 +408,11 @@ const BorrowScreen = () => {
       {/* Quá hạn - Ưu tiên hiển thị đầu tiên */}
       {getOverdueSlips().length > 0 && (
         <View>
-          <TouchableOpacity onPress={toggleQuaHan} style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              🚨 Quá hạn ({getOverdueSlips().length})
-            </Text>
-            <Text style={styles.toggleIcon}>
-              {isQuaHanExpanded ? "▼" : "▶"}
-            </Text>
-          </TouchableOpacity>
+          <SectionHeader
+            title={`Quá hạn (${getOverdueSlips().length})`}
+            onPress={toggleQuaHan}
+            rightText={isQuaHanExpanded ? "▼" : "▶"}
+          />
           {isQuaHanExpanded && (
             <>
               {layPhanTuPhanTrang(getOverdueSlips(), phanTrangQuaHan).map(
@@ -420,12 +425,20 @@ const BorrowScreen = () => {
                       style={[styles.bookCard, styles.overdueCard]}
                     >
                       <View style={styles.bookHeader}>
-                        <Text style={styles.bookTitle}>
-                          Phiếu mượn #{slip.ma_phieu_muon}
-                        </Text>
-                        <Text style={styles.badgeOverdue}>
+                        <TouchableOpacity
+                          onPress={() =>
+                            navigation.navigate("BorrowingDetail", {
+                              slipId: slip.ma_phieu_muon,
+                            })
+                          }
+                        >
+                          <Text style={styles.bookTitle}>
+                            Phiếu mượn #{slip.ma_phieu_muon}
+                          </Text>
+                        </TouchableOpacity>
+                        <Badge variant="solid">
                           Quá hạn {overdueDays} ngày
-                        </Text>
+                        </Badge>
                       </View>
                       <Text style={styles.bookMeta}>
                         Ngày mượn: {formatDate(slip.ngay_muon)} | Hạn trả:{" "}
@@ -457,17 +470,11 @@ const BorrowScreen = () => {
       {/* Sắp hết hạn */}
       {getDueSoonSlips().length > 0 && (
         <View>
-          <TouchableOpacity
+          <SectionHeader
+            title={`Sắp hết hạn (${getDueSoonSlips().length})`}
             onPress={toggleSapHetHan}
-            style={styles.sectionHeader}
-          >
-            <Text style={styles.sectionTitle}>
-              ⚠️ Sắp hết hạn ({getDueSoonSlips().length})
-            </Text>
-            <Text style={styles.toggleIcon}>
-              {isSapHetHanExpanded ? "▼" : "▶"}
-            </Text>
-          </TouchableOpacity>
+            rightText={isSapHetHanExpanded ? "▼" : "▶"}
+          />
           {isSapHetHanExpanded && (
             <>
               {layPhanTuPhanTrang(getDueSoonSlips(), phanTrangSapHetHan).map(
@@ -479,10 +486,18 @@ const BorrowScreen = () => {
                       style={[styles.bookCard, styles.dueSoonCard]}
                     >
                       <View style={styles.bookHeader}>
-                        <Text style={styles.bookTitle}>
-                          Phiếu mượn #{slip.ma_phieu_muon}
-                        </Text>
-                        <Text style={styles.badgeDanger}>{daysLeft} ngày</Text>
+                        <TouchableOpacity
+                          onPress={() =>
+                            navigation.navigate("BorrowingDetail", {
+                              slipId: slip.ma_phieu_muon,
+                            })
+                          }
+                        >
+                          <Text style={styles.bookTitle}>
+                            Phiếu mượn #{slip.ma_phieu_muon}
+                          </Text>
+                        </TouchableOpacity>
+                        <Badge>{daysLeft} ngày</Badge>
                       </View>
                       <Text style={styles.bookMeta}>
                         Ngày mượn: {formatDate(slip.ngay_muon)} | Hạn trả:{" "}
@@ -515,17 +530,11 @@ const BorrowScreen = () => {
       {/* Đang mượn */}
       {getNormalActiveBorrowingSlips().length > 0 && (
         <View>
-          <TouchableOpacity
+          <SectionHeader
+            title={`Đang mượn (${getNormalActiveBorrowingSlips().length})`}
             onPress={toggleDangMuon}
-            style={styles.sectionHeader}
-          >
-            <Text style={styles.sectionTitle}>
-              📚 Đang mượn ({getNormalActiveBorrowingSlips().length})
-            </Text>
-            <Text style={styles.toggleIcon}>
-              {isDangMuonExpanded ? "▼" : "▶"}
-            </Text>
-          </TouchableOpacity>
+            rightText={isDangMuonExpanded ? "▼" : "▶"}
+          />
           {isDangMuonExpanded && (
             <>
               {layPhanTuPhanTrang(
@@ -538,12 +547,18 @@ const BorrowScreen = () => {
                 return (
                   <View key={slip.ma_phieu_muon} style={styles.bookCard}>
                     <View style={styles.bookHeader}>
-                      <Text style={styles.bookTitle}>
-                        Phiếu mượn #{slip.ma_phieu_muon}
-                      </Text>
-                      <Text style={statusInfo.badgeStyle}>
-                        {statusInfo.badgeText}
-                      </Text>
+                      <TouchableOpacity
+                        onPress={() =>
+                          navigation.navigate("BorrowingDetail", {
+                            slipId: slip.ma_phieu_muon,
+                          })
+                        }
+                      >
+                        <Text style={styles.bookTitle}>
+                          Phiếu mượn #{slip.ma_phieu_muon}
+                        </Text>
+                      </TouchableOpacity>
+                      <Badge variant="subtle">{statusInfo.badgeText}</Badge>
                     </View>
                     <Text style={styles.bookMeta}>
                       Ngày mượn: {formatDate(slip.ngay_muon)} | Hạn trả:{" "}

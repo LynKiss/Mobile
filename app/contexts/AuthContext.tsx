@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log("Attempting login with:", email, password);
-      const response = await fetch("http://160.250.132.142/api/auth/login", {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,6 +115,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setIsLoggedIn(true);
         setUser(userData);
+
+        // Navigate to main app after successful login
+        setTimeout(() => {
+          if (navigationRef.isReady()) {
+            navigationRef.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: "MainTab" }],
+              })
+            );
+          }
+        }, 100);
+
         return true;
       } else {
         console.error("Login failed:", data.message || "Invalid credentials");
